@@ -210,19 +210,11 @@ class RecurringScreen extends ConsumerWidget {
                                       width: 48,
                                       height: 48,
                                       decoration: BoxDecoration(
-                                        gradient: item.type == TransactionType.income
-                                            ? const LinearGradient(
-                                                colors: [Colors.green, Color(0xFF2E7D32)],
-                                              )
-                                            : const LinearGradient(
-                                                colors: [Colors.red, Color(0xFFC62828)],
-                                              ),
+                                        gradient: GlassTheme.accentGradient,
                                         borderRadius: BorderRadius.circular(12),
                                       ),
-                                      child: Icon(
-                                        item.type == TransactionType.income
-                                            ? Icons.arrow_downward
-                                            : Icons.arrow_upward,
+                                      child: const Icon(
+                                        Icons.repeat,
                                         color: Colors.white,
                                       ),
                                     ),
@@ -232,7 +224,7 @@ class RecurringScreen extends ConsumerWidget {
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            item.description,
+                                            item.name,
                                             style: const TextStyle(
                                               color: Colors.white,
                                               fontSize: 16,
@@ -251,11 +243,9 @@ class RecurringScreen extends ConsumerWidget {
                                       ),
                                     ),
                                     Text(
-                                      '${item.type == TransactionType.income ? '+' : '-'}${NumberFormat('#,###').format(item.amount)}',
-                                      style: TextStyle(
-                                        color: item.type == TransactionType.income
-                                            ? Colors.green
-                                            : Colors.red,
+                                      '${NumberFormat('#,###').format(item.amount)} сом',
+                                      style: const TextStyle(
+                                        color: Colors.white,
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -350,17 +340,20 @@ class RecurringScreen extends ConsumerWidget {
         return 'Ежедневно';
       case RecurringFrequency.weekly:
         return 'Еженедельно';
+      case RecurringFrequency.biweekly:
+        return 'Раз в 2 недели';
       case RecurringFrequency.monthly:
         return 'Ежемесячно';
+      case RecurringFrequency.quarterly:
+        return 'Ежеквартально';
       case RecurringFrequency.yearly:
         return 'Ежегодно';
     }
   }
 
   void _showAddRecurringDialog(BuildContext context, WidgetRef ref) {
-    final descriptionController = TextEditingController();
+    final nameController = TextEditingController();
     final amountController = TextEditingController();
-    TransactionType type = TransactionType.expense;
     RecurringFrequency frequency = RecurringFrequency.monthly;
 
     showDialog(
@@ -377,10 +370,10 @@ class RecurringScreen extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
-                  controller: descriptionController,
+                  controller: nameController,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    labelText: 'Описание',
+                    labelText: 'Название',
                     labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
                     enabledBorder: UnderlineInputBorder(
                       borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
@@ -401,31 +394,6 @@ class RecurringScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<TransactionType>(
-                  value: type,
-                  dropdownColor: const Color(0xFF1a1a2e),
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'Тип',
-                    labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                  ),
-                  items: const [
-                    DropdownMenuItem(
-                      value: TransactionType.expense,
-                      child: Text('Расход'),
-                    ),
-                    DropdownMenuItem(
-                      value: TransactionType.income,
-                      child: Text('Доход'),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() => type = value);
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
                 DropdownButtonFormField<RecurringFrequency>(
                   value: frequency,
                   dropdownColor: const Color(0xFF1a1a2e),
@@ -444,8 +412,16 @@ class RecurringScreen extends ConsumerWidget {
                       child: Text('Еженедельно'),
                     ),
                     DropdownMenuItem(
+                      value: RecurringFrequency.biweekly,
+                      child: Text('Раз в 2 недели'),
+                    ),
+                    DropdownMenuItem(
                       value: RecurringFrequency.monthly,
                       child: Text('Ежемесячно'),
+                    ),
+                    DropdownMenuItem(
+                      value: RecurringFrequency.quarterly,
+                      child: Text('Ежеквартально'),
                     ),
                     DropdownMenuItem(
                       value: RecurringFrequency.yearly,
@@ -468,18 +444,16 @@ class RecurringScreen extends ConsumerWidget {
             ),
             TextButton(
               onPressed: () async {
-                if (descriptionController.text.isNotEmpty &&
+                if (nameController.text.isNotEmpty &&
                     amountController.text.isNotEmpty) {
                   final recurring = RecurringTransactionEntity(
                     id: '',
                     userId: 'demo_user',
-                    description: descriptionController.text,
+                    name: nameController.text,
                     amount: double.parse(amountController.text),
-                    type: type,
+                    category: 'other',
                     frequency: frequency,
-                    nextPaymentDate: DateTime.now(),
-                    isActive: true,
-                    categoryId: 'other',
+                    startDate: DateTime.now(),
                     accountId: 'default',
                     createdAt: DateTime.now(),
                   );

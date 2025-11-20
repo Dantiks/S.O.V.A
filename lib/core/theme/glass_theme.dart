@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Стеклянная дизайн-система для S.O.V.A
 class GlassTheme {
@@ -178,6 +179,9 @@ class _WaterRippleButtonState extends State<WaterRippleButton>
   }
 
   void _handleTap(TapDownDetails details) {
+    // Haptic feedback
+    HapticFeedback.lightImpact();
+    
     setState(() {
       _tapPosition = details.localPosition;
     });
