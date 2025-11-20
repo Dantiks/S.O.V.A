@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "800006114552",
+    "project_id": "sova-166a6",
+    "storage_bucket": "sova-166a6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:800006114552:android:9d45cca89b514563e3ff0d",
+        "android_client_info": {
+          "package_name": "com.example.sova"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDsRM-d3bdFRJ0hpiAG6YxMt6-MziQ01OU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

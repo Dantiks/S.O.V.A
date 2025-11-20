@@ -1,0 +1,278 @@
+import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:sova/domain/entities/chat_message_entity.dart';
+import 'package:sova/domain/entities/transaction_entity.dart';
+import 'package:sova/domain/entities/bank_account_entity.dart';
+import 'package:sova/domain/entities/financial_insight_entity.dart';
+
+class AIService {
+  late final GenerativeModel _model;
+  final List<Content> _conversationHistory = [];
+  
+  // TODO: Move API key to environment variables
+  static const String _apiKey = 'YOUR_GEMINI_API_KEY';
+
+  AIService() {
+    _model = GenerativeModel(
+      model: 'gemini-pro',
+      apiKey: _apiKey,
+      generationConfig: GenerationConfig(
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 1024,
+      ),
+      safetySettings: [
+        SafetySetting(HarmCategory.harassment, HarmBlockThreshold.medium),
+        SafetySetting(HarmCategory.hateSpeech, HarmBlockThreshold.medium),
+        SafetySetting(HarmCategory.sexuallyExplicit, HarmBlockThreshold.medium),
+        SafetySetting(HarmCategory.dangerousContent, HarmBlockThreshold.medium),
+      ],
+    );
+  }
+
+  Future<String> sendMessage(
+    String message, {
+    List<TransactionEntity>? recentTransactions,
+    List<BankAccountEntity>? accounts,
+    Map<String, dynamic>? financialContext,
+  }) async {
+    try {
+      // Build context-aware prompt
+      final contextualPrompt = _buildContextualPrompt(
+        message,
+        recentTransactions: recentTransactions,
+        accounts: accounts,
+        financialContext: financialContext,
+      );
+
+      // Add user message to history
+      _conversationHistory.add(Content.text(contextualPrompt));
+
+      // Generate response
+      final chat = _model.startChat(history: _conversationHistory);
+      final response = await chat.sendMessage(Content.text(contextualPrompt));
+
+      // Add assistant response to history
+      if (response.text != null) {
+        _conversationHistory.add(Content.model([TextPart(response.text!)]));
+        return response.text!;
+      }
+
+      return 'Извините, я не смог обработать ваш запрос.';
+    } catch (e) {
+      return 'Произошла ошибка при обработке запроса: ${e.toString()}';
+    }
+  }
+
+  String _buildContextualPrompt(
+    String userMessage, {
+    List<TransactionEntity>? recentTransactions,
+    List<BankAccountEntity>? accounts,
+    Map<String, dynamic>? financialContext,
+  }) {
+    final buffer = StringBuffer();
+    
+    buffer.writeln('Ты S.O.V.A - продвинутый финансовый AI-ассистент для пользователей из Кыргызстана.');
+    buffer.writeln('Твоя задача - помогать пользователям управлять финансами, анализировать расходы и давать полезные советы.');
+    buffer.writeln('Отвечай на русском языке, будь дружелюбным и профессиональным.');
+    buffer.writeln();
+
+    // Add financial context
+    if (accounts != null && accounts.isNotEmpty) {
+      buffer.writeln('Банковские счета пользователя:');
+      for (final account in accounts) {
+        buffer.writeln('- ${account.bankName}: ${account.balance} ${account.currency}');
+      }
+      buffer.writeln();
+    }
+
+    if (recentTransactions != null && recentTransactions.isNotEmpty) {
+      buffer.writeln('Последние транзакции:');
+      for (final transaction in recentTransactions.take(10)) {
+        final type = transaction.type == TransactionType.income ? 'Доход' : 'Расход';
+        buffer.writeln('- $type: ${transaction.amount} ${transaction.currency} (${transaction.category})');
+      }
+      buffer.writeln();
+    }
+
+    if (financialContext != null) {
+      buffer.writeln('Финансовый контекст:');
+      financialContext.forEach((key, value) {
+        buffer.writeln('- $key: $value');
+      });
+      buffer.writeln();
+    }
+
+    buffer.writeln('Вопрос пользователя: $userMessage');
+
+    return buffer.toString();
+  }
+
+  Future<List<FinancialInsightEntity>> generateInsights({
+    required List<TransactionEntity> transactions,
+    required List<BankAccountEntity> accounts,
+  }) async {
+    try {
+      final prompt = _buildInsightsPrompt(transactions, accounts);
+      final response = await _model.generateContent([Content.text(prompt)]);
+
+      if (response.text != null) {
+        return _parseInsights(response.text!);
+      }
+
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  String _buildInsightsPrompt(
+    List<TransactionEntity> transactions,
+    List<BankAccountEntity> accounts,
+  ) {
+    final buffer = StringBuffer();
+    
+    buffer.writeln('Проанализируй финансовые данные и предоставь 3-5 ключевых инсайтов.');
+    buffer.writeln('Формат ответа: каждый инсайт на новой строке в формате "TITLE|DESCRIPTION|PRIORITY"');
+    buffer.writeln('PRIORITY может быть: low, medium, high, critical');
+    buffer.writeln();
+
+    // Calculate statistics
+    double totalIncome = 0;
+    double totalExpense = 0;
+    final categoryExpenses = <String, double>{};
+
+    for (final transaction in transactions) {
+      if (transaction.type == TransactionType.income) {
+        totalIncome += transaction.amount;
+      } else if (transaction.type == TransactionType.expense) {
+        totalExpense += transaction.amount;
+        categoryExpenses[transaction.category] = 
+            (categoryExpenses[transaction.category] ?? 0) + transaction.amount;
+      }
+    }
+
+    buffer.writeln('Статистика:');
+    buffer.writeln('Общий доход: $totalIncome');
+    buffer.writeln('Общий расход: $totalExpense');
+    buffer.writeln('Баланс: ${totalIncome - totalExpense}');
+    buffer.writeln();
+    buffer.writeln('Расходы по категориям:');
+    categoryExpenses.forEach((category, amount) {
+      buffer.writeln('- $category: $amount');
+    });
+
+    return buffer.toString();
+  }
+
+  List<FinancialInsightEntity> _parseInsights(String response) {
+    final insights = <FinancialInsightEntity>[];
+    final lines = response.split('\n');
+
+    for (final line in lines) {
+      if (line.trim().isEmpty) continue;
+      
+      final parts = line.split('|');
+      if (parts.length >= 3) {
+        insights.add(
+          FinancialInsightEntity(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            userId: 'current_user',
+            type: InsightType.recommendation,
+            priority: _parsePriority(parts[2].trim()),
+            title: parts[0].trim(),
+            description: parts[1].trim(),
+            generatedAt: DateTime.now(),
+          ),
+        );
+      }
+    }
+
+    return insights;
+  }
+
+  InsightPriority _parsePriority(String priority) {
+    switch (priority.toLowerCase()) {
+      case 'critical':
+        return InsightPriority.critical;
+      case 'high':
+        return InsightPriority.high;
+      case 'medium':
+        return InsightPriority.medium;
+      default:
+        return InsightPriority.low;
+    }
+  }
+
+  Future<String> categorizeTransaction(TransactionEntity transaction) async {
+    try {
+      final prompt = '''
+Определи категорию для следующей транзакции:
+Описание: ${transaction.description ?? 'Нет описания'}
+Сумма: ${transaction.amount} ${transaction.currency}
+Торговая точка: ${transaction.merchant ?? 'Неизвестно'}
+
+Доступные категории: Продукты, Транспорт, Развлечения, Здоровье, Образование, 
+Коммунальные услуги, Одежда, Рестораны, Путешествия, Другое
+
+Ответь только названием категории, без дополнительного текста.
+''';
+
+      final response = await _model.generateContent([Content.text(prompt)]);
+      return response.text?.trim() ?? 'Другое';
+    } catch (e) {
+      return 'Другое';
+    }
+  }
+
+  Future<Map<String, dynamic>> analyzeBudget({
+    required double monthlyIncome,
+    required Map<String, double> categoryExpenses,
+  }) async {
+    try {
+      final prompt = '''
+Проанализируй бюджет пользователя и дай рекомендации:
+
+Месячный доход: $monthlyIncome KGS
+
+Расходы по категориям:
+${categoryExpenses.entries.map((e) => '- ${e.key}: ${e.value} KGS').join('\n')}
+
+Предоставь анализ в формате JSON:
+{
+  "totalExpenses": число,
+  "savingsRate": процент,
+  "recommendations": ["рекомендация1", "рекомендация2"],
+  "alerts": ["предупреждение1", "предупреждение2"]
+}
+''';
+
+      final response = await _model.generateContent([Content.text(prompt)]);
+      // Parse JSON response
+      // In production, implement proper JSON parsing
+      return {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  void clearHistory() {
+    _conversationHistory.clear();
+  }
+
+  List<ChatMessageEntity> getHistory() {
+    return _conversationHistory.asMap().entries.map((entry) {
+      final content = entry.value;
+      final isUser = entry.key % 2 == 0;
+      
+      return ChatMessageEntity(
+        id: entry.key.toString(),
+        userId: 'current_user',
+        role: isUser ? MessageRole.user : MessageRole.assistant,
+        type: MessageType.text,
+        content: content.parts.first.toString(),
+        timestamp: DateTime.now(),
+      );
+    }).toList();
+  }
+}
