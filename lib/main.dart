@@ -93,15 +93,19 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     
     if (!mounted) return;
     
+    final navigator = Navigator.of(context);
+    
     if (hasPinCode) {
       // PIN уже установлен - показываем экран ввода
-      Navigator.of(context).pushReplacement(
+      navigator.pushReplacement(
         MaterialPageRoute(
-          builder: (_) => EnterPinScreen(
+          builder: (context) => EnterPinScreen(
             onSuccess: () {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (_) => const HomeScreen()),
-              );
+              if (context.mounted) {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (_) => const HomeScreen()),
+                );
+              }
             },
             canUseBiometric: true,
           ),
@@ -109,13 +113,15 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       );
     } else {
       // PIN не установлен - показываем экран настройки
-      Navigator.of(context).pushReplacement(
+      navigator.pushReplacement(
         MaterialPageRoute(
-          builder: (_) => SetupPinScreen(
+          builder: (context) => SetupPinScreen(
             onPinSet: () {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (_) => const HomeScreen()),
-              );
+              if (context.mounted) {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (_) => const HomeScreen()),
+                );
+              }
             },
           ),
         ),

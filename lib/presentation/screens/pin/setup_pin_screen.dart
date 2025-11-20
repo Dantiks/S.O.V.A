@@ -44,6 +44,8 @@ class _SetupPinScreenState extends State<SetupPinScreen> {
   }
 
   Future<void> _savePin() async {
+    if (!mounted) return;
+    
     setState(() {
       _isLoading = true;
       _errorMessage = '';
@@ -55,8 +57,21 @@ class _SetupPinScreenState extends State<SetupPinScreen> {
       print('PIN успешно сохранен');
       
       if (mounted) {
-        // Переходим сразу на главный экран без сообщения
-        widget.onPinSet();
+        // Показываем успешное сообщение
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('PIN-код успешно установлен!'),
+            backgroundColor: Colors.green,
+            duration: Duration(milliseconds: 500),
+          ),
+        );
+        
+        // Небольшая задержка перед переходом
+        await Future.delayed(const Duration(milliseconds: 300));
+        
+        if (mounted) {
+          widget.onPinSet();
+        }
       }
     } catch (e, stackTrace) {
       print('Ошибка сохранения PIN: $e');
@@ -64,7 +79,7 @@ class _SetupPinScreenState extends State<SetupPinScreen> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = 'Ошибка: $e';
+          _errorMessage = 'Ошибка: ${e.toString()}';
           _pin = '';
         });
       }
