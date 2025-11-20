@@ -1,113 +1,497 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sova/core/theme/glass_theme.dart';
+import 'package:sova/presentation/providers/recurring_provider.dart';
 import 'package:sova/domain/entities/recurring_transaction_entity.dart';
+import 'package:intl/intl.dart';
 
 class RecurringScreen extends ConsumerWidget {
   const RecurringScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final recurring = ref.watch(recurringProvider);
+    final activeRecurring = ref.read(recurringProvider.notifier).getActive();
+    final monthlyTotal = ref.read(recurringProvider.notifier).getMonthlyTotal();
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Регулярные платежи'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => _showAddDialog(context),
+      backgroundColor: Colors.black,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF1a1a2e),
+              Color(0xFF0f0f1e),
+            ],
           ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildRecurringCard(
-            RecurringTransactionEntity(
-              id: '1',
-              userId: 'user1',
-              name: 'Netflix',
-              amount: 500,
-              category: 'entertainment',
-              frequency: RecurringFrequency.monthly,
-              startDate: DateTime(2024, 1, 1),
-              accountId: 'acc1',
-              merchantName: 'Netflix',
-              nextDueDate: DateTime.now().add(const Duration(days: 5)),
-            ),
-          ),
-          const SizedBox(height: 12),
-          _buildRecurringCard(
-            RecurringTransactionEntity(
-              id: '2',
-              userId: 'user1',
-              name: 'Spotify',
-              amount: 300,
-              category: 'entertainment',
-              frequency: RecurringFrequency.monthly,
-              startDate: DateTime(2024, 1, 1),
-              accountId: 'acc1',
-              merchantName: 'Spotify',
-              nextDueDate: DateTime.now().add(const Duration(days: 12)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRecurringCard(RecurringTransactionEntity recurring) {
-    return Card(
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: Colors.purple.shade100,
-          child: const Icon(Icons.repeat, color: Colors.purple),
         ),
-        title: Text(recurring.name),
-        subtitle: Text('${recurring.amount} ₸ • ${_getFrequencyText(recurring.frequency)}'),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              recurring.isDueToday ? 'Сегодня' : 'Через ${recurring.daysUntilDue} дн.',
-              style: TextStyle(
-                color: recurring.isDueToday ? Colors.red : Colors.grey,
-                fontWeight: FontWeight.w600,
+        child: SafeArea(
+          child: CustomScrollView(
+            slivers: [
+              // Header
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Регулярные платежи',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      WaterRippleButton(
+                        onPressed: () => _showAddRecurringDialog(context, ref),
+                        padding: const EdgeInsets.all(12),
+                        child: const Icon(Icons.add, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-            Switch(
-              value: recurring.isActive,
-              onChanged: (value) {},
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-          ],
+
+              // Monthly Total
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: GlassContainer(
+                    padding: const EdgeInsets.all(24),
+                    gradient: GlassTheme.accentGradient,
+                    boxShadow: GlassTheme.glowShadow,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.repeat,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Ежемесячно',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.9),
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${NumberFormat('#,###').format(monthlyTotal)} сом',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.info_outline,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Активных платежей: ${activeRecurring.length}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+              // Recurring List
+              if (recurring.isEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: GlassCard(
+                      padding: const EdgeInsets.all(40),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.repeat,
+                            size: 64,
+                            color: Colors.white.withOpacity(0.3),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Нет регулярных платежей',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.7),
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Добавьте первый регулярный платеж',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.5),
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          WaterRippleButton(
+                            onPressed: () => _showAddRecurringDialog(context, ref),
+                            child: const Text(
+                              'Добавить платеж',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final item = recurring[index];
+                        final nextDate = ref.read(recurringProvider.notifier)
+                            .getNextPaymentDate(item);
+                        final daysUntil = nextDate.difference(DateTime.now()).inDays;
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: GlassCard(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 48,
+                                      height: 48,
+                                      decoration: BoxDecoration(
+                                        gradient: item.type == TransactionType.income
+                                            ? const LinearGradient(
+                                                colors: [Colors.green, Color(0xFF2E7D32)],
+                                              )
+                                            : const LinearGradient(
+                                                colors: [Colors.red, Color(0xFFC62828)],
+                                              ),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        item.type == TransactionType.income
+                                            ? Icons.arrow_downward
+                                            : Icons.arrow_upward,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            item.description,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            _getFrequencyText(item.frequency),
+                                            style: TextStyle(
+                                              color: Colors.white.withOpacity(0.6),
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Text(
+                                      '${item.type == TransactionType.income ? '+' : '-'}${NumberFormat('#,###').format(item.amount)}',
+                                      style: TextStyle(
+                                        color: item.type == TransactionType.income
+                                            ? Colors.green
+                                            : Colors.red,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.05),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.calendar_today,
+                                            color: Colors.white.withOpacity(0.6),
+                                            size: 16,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Следующий: ${DateFormat('dd MMM').format(nextDate)}',
+                                            style: TextStyle(
+                                              color: Colors.white.withOpacity(0.7),
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Text(
+                                        daysUntil == 0
+                                            ? 'Сегодня'
+                                            : daysUntil == 1
+                                                ? 'Завтра'
+                                                : 'Через $daysUntil дн.',
+                                        style: TextStyle(
+                                          color: daysUntil <= 3
+                                              ? Colors.orange
+                                              : Colors.white.withOpacity(0.7),
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (!item.isActive) ...[
+                                  const SizedBox(height: 12),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Text(
+                                      'Приостановлено',
+                                      style: TextStyle(
+                                        color: Colors.orange,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                      childCount: recurring.length,
+                    ),
+                  ),
+                ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  String _getFrequencyText(RecurringFrequency freq) {
-    switch (freq) {
-      case RecurringFrequency.daily: return 'Ежедневно';
-      case RecurringFrequency.weekly: return 'Еженедельно';
-      case RecurringFrequency.biweekly: return 'Раз в 2 недели';
-      case RecurringFrequency.monthly: return 'Ежемесячно';
-      case RecurringFrequency.quarterly: return 'Ежеквартально';
-      case RecurringFrequency.yearly: return 'Ежегодно';
+  String _getFrequencyText(RecurringFrequency frequency) {
+    switch (frequency) {
+      case RecurringFrequency.daily:
+        return 'Ежедневно';
+      case RecurringFrequency.weekly:
+        return 'Еженедельно';
+      case RecurringFrequency.monthly:
+        return 'Ежемесячно';
+      case RecurringFrequency.yearly:
+        return 'Ежегодно';
     }
   }
 
-  void _showAddDialog(BuildContext context) {
+  void _showAddRecurringDialog(BuildContext context, WidgetRef ref) {
+    final descriptionController = TextEditingController();
+    final amountController = TextEditingController();
+    TransactionType type = TransactionType.expense;
+    RecurringFrequency frequency = RecurringFrequency.monthly;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Добавить регулярный платеж'),
-        content: const Text('Функция в разработке'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: const Color(0xFF1a1a2e),
+          title: const Text(
+            'Новый регулярный платеж',
+            style: TextStyle(color: Colors.white),
           ),
-        ],
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: descriptionController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Описание',
+                    labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: amountController,
+                  keyboardType: TextInputType.number,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Сумма',
+                    labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<TransactionType>(
+                  value: type,
+                  dropdownColor: const Color(0xFF1a1a2e),
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Тип',
+                    labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: TransactionType.expense,
+                      child: Text('Расход'),
+                    ),
+                    DropdownMenuItem(
+                      value: TransactionType.income,
+                      child: Text('Доход'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => type = value);
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<RecurringFrequency>(
+                  value: frequency,
+                  dropdownColor: const Color(0xFF1a1a2e),
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Частота',
+                    labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: RecurringFrequency.daily,
+                      child: Text('Ежедневно'),
+                    ),
+                    DropdownMenuItem(
+                      value: RecurringFrequency.weekly,
+                      child: Text('Еженедельно'),
+                    ),
+                    DropdownMenuItem(
+                      value: RecurringFrequency.monthly,
+                      child: Text('Ежемесячно'),
+                    ),
+                    DropdownMenuItem(
+                      value: RecurringFrequency.yearly,
+                      child: Text('Ежегодно'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => frequency = value);
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Отмена'),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (descriptionController.text.isNotEmpty &&
+                    amountController.text.isNotEmpty) {
+                  final recurring = RecurringTransactionEntity(
+                    id: '',
+                    userId: 'demo_user',
+                    description: descriptionController.text,
+                    amount: double.parse(amountController.text),
+                    type: type,
+                    frequency: frequency,
+                    nextPaymentDate: DateTime.now(),
+                    isActive: true,
+                    categoryId: 'other',
+                    accountId: 'default',
+                    createdAt: DateTime.now(),
+                  );
+
+                  await ref.read(recurringProvider.notifier).addRecurring(recurring);
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Добавить'),
+            ),
+          ],
+        ),
       ),
     );
   }
