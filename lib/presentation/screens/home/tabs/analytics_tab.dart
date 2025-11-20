@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sova/core/theme/glass_theme.dart';
+import 'package:sova/presentation/providers/transaction_provider.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:sova/core/constants/app_colors.dart';
-import 'package:sova/core/constants/app_text_styles.dart';
-import 'package:sova/presentation/widgets/glassmorphic_container.dart';
+import 'package:intl/intl.dart';
 
 class AnalyticsTab extends ConsumerStatefulWidget {
   const AnalyticsTab({super.key});
@@ -13,314 +13,232 @@ class AnalyticsTab extends ConsumerStatefulWidget {
 }
 
 class _AnalyticsTabState extends ConsumerState<AnalyticsTab> {
-  String _selectedPeriod = 'Месяц';
+  String _selectedPeriod = 'month';
 
   @override
   Widget build(BuildContext context) {
+    final transactions = ref.watch(transactionProvider);
+    
+    // Расчет периода
+    final now = DateTime.now();
+    DateTime startDate;
+    DateTime endDate = now;
+    
+    switch (_selectedPeriod) {
+      case 'week':
+        startDate = now.subtract(const Duration(days: 7));
+        break;
+      case 'month':
+        startDate = DateTime(now.year, now.month, 1);
+        break;
+      case 'year':
+        startDate = DateTime(now.year, 1, 1);
+        break;
+      default:
+        startDate = DateTime(now.year, now.month, 1);
+    }
+    
+    final income = ref.read(transactionProvider.notifier)
+        .getIncomeForPeriod(startDate, endDate);
+    final expense = ref.read(transactionProvider.notifier)
+        .getExpenseForPeriod(startDate, endDate);
+    final balance = income - expense;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Аналитика'),
-        actions: [
-          PopupMenuButton<String>(
-            initialValue: _selectedPeriod,
-            icon: const Icon(Icons.calendar_today),
-            color: AppColors.darkCard,
-            onSelected: (value) {
-              setState(() => _selectedPeriod = value);
-            },
-            itemBuilder: (context) => ['Неделя', 'Месяц', 'Год']
-                .map((period) => PopupMenuItem(
-                      value: period,
-                      child: Text(
-                        period,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.white,
-                        ),
-                      ),
-                    ))
-                .toList(),
+      backgroundColor: Colors.black,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF1a1a2e),
+              Color(0xFF0f0f1e),
+            ],
           ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          // Spending Chart
-          _buildSpendingChart(),
-          const SizedBox(height: 24),
-
-          // Category Breakdown
-          Text(
-            'Расходы по категориям',
-            style: AppTextStyles.titleMedium.copyWith(
-              color: AppColors.white,
-            ),
-          ),
-          const SizedBox(height: 12),
-          _buildCategoryBreakdown(),
-
-          const SizedBox(height: 24),
-
-          // Income vs Expenses
-          Text(
-            'Доходы и расходы',
-            style: AppTextStyles.titleMedium.copyWith(
-              color: AppColors.white,
-            ),
-          ),
-          const SizedBox(height: 12),
-          _buildIncomeExpensesChart(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSpendingChart() {
-    return GlassmorphicContainer(
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        height: 300,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Динамика расходов',
-              style: AppTextStyles.titleMedium.copyWith(
-                color: AppColors.white,
-              ),
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: LineChart(
-                LineChartData(
-                  gridData: FlGridData(
-                    show: true,
-                    drawVerticalLine: false,
-                    horizontalInterval: 10000,
-                    getDrawingHorizontalLine: (value) {
-                      return FlLine(
-                        color: AppColors.darkBorder,
-                        strokeWidth: 1,
-                      );
-                    },
-                  ),
-                  titlesData: FlTitlesData(
-                    show: true,
-                    rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 30,
-                        getTitlesWidget: (value, meta) {
-                          const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-                          if (value.toInt() >= 0 && value.toInt() < days.length) {
-                            return Text(
-                              days[value.toInt()],
-                              style: AppTextStyles.labelSmall.copyWith(
-                                color: AppColors.gray400,
-                              ),
-                            );
-                          }
-                          return const Text('');
-                        },
-                      ),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 40,
-                        getTitlesWidget: (value, meta) {
-                          return Text(
-                            '${(value / 1000).toInt()}k',
-                            style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.gray400,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  borderData: FlBorderData(show: false),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: [
-                        const FlSpot(0, 15000),
-                        const FlSpot(1, 22000),
-                        const FlSpot(2, 18000),
-                        const FlSpot(3, 25000),
-                        const FlSpot(4, 20000),
-                        const FlSpot(5, 30000),
-                        const FlSpot(6, 28000),
-                      ],
-                      isCurved: true,
-                      gradient: AppColors.purpleGradient,
-                      barWidth: 3,
-                      isStrokeCapRound: true,
-                      dotData: const FlDotData(show: false),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        gradient: LinearGradient(
-                          colors: [
-                            AppColors.purple.withOpacity(0.3),
-                            AppColors.purple.withOpacity(0.0),
-                          ],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildCategoryBreakdown() {
-    final categories = [
-      {'name': 'Продукты', 'amount': 15200, 'percentage': 35, 'color': AppColors.error},
-      {'name': 'Транспорт', 'amount': 8500, 'percentage': 20, 'color': AppColors.info},
-      {'name': 'Развлечения', 'amount': 6800, 'percentage': 16, 'color': AppColors.warning},
-      {'name': 'Рестораны', 'amount': 5900, 'percentage': 14, 'color': AppColors.success},
-      {'name': 'Другое', 'amount': 6150, 'percentage': 15, 'color': AppColors.gray500},
-    ];
-
-    return GlassmorphicContainer(
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: categories.map((category) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: SafeArea(
+          child: CustomScrollView(
+            slivers: [
+              // Header
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 12,
-                            height: 12,
-                            decoration: BoxDecoration(
-                              color: category['color'] as Color,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            category['name'] as String,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.white,
-                            ),
-                          ),
-                        ],
+                      const Text(
+                        'Аналитика',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            '${category['amount']} ₸',
-                            style: AppTextStyles.titleSmall.copyWith(
-                              color: AppColors.white,
+                      const SizedBox(height: 20),
+                      
+                      // Period Selector
+                      GlassContainer(
+                        padding: const EdgeInsets.all(4),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _buildPeriodButton('Неделя', 'week'),
                             ),
-                          ),
-                          Text(
-                            '${category['percentage']}%',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.gray400,
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: _buildPeriodButton('Месяц', 'month'),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: _buildPeriodButton('Год', 'year'),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: (category['percentage'] as int) / 100,
-                      backgroundColor: AppColors.darkBorder,
-                      valueColor: AlwaysStoppedAnimation(
-                        category['color'] as Color,
+                ),
+              ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 20)),
+
+              // Summary Cards
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _buildSummaryCard(
+                          'Доходы',
+                          income,
+                          Icons.arrow_downward,
+                          Colors.green,
+                        ),
                       ),
-                      minHeight: 6,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildSummaryCard(
+                          'Расходы',
+                          expense,
+                          Icons.arrow_upward,
+                          Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 12)),
+
+              // Balance Card
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: GlassContainer(
+                    padding: const EdgeInsets.all(20),
+                    gradient: balance >= 0
+                        ? const LinearGradient(
+                            colors: [Colors.green, Color(0xFF2E7D32)],
+                          )
+                        : const LinearGradient(
+                            colors: [Colors.red, Color(0xFFC62828)],
+                          ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              balance >= 0 ? 'Профицит' : 'Дефицит',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${NumberFormat('#,###').format(balance.abs())} сом',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Icon(
+                          balance >= 0 ? Icons.trending_up : Icons.trending_down,
+                          color: Colors.white,
+                          size: 48,
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
 
-  Widget _buildIncomeExpensesChart() {
-    return GlassmorphicContainer(
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        height: 250,
-        child: BarChart(
-          BarChartData(
-            alignment: BarChartAlignment.spaceAround,
-            maxY: 100000,
-            barTouchData: BarTouchData(enabled: false),
-            titlesData: FlTitlesData(
-              show: true,
-              rightTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false),
-              ),
-              topTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false),
-              ),
-              bottomTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  getTitlesWidget: (value, meta) {
-                    const months = ['Янв', 'Фев', 'Мар', 'Апр'];
-                    if (value.toInt() >= 0 && value.toInt() < months.length) {
-                      return Text(
-                        months[value.toInt()],
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.gray400,
+              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+              // Chart
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: GlassCard(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Динамика',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      );
-                    }
-                    return const Text('');
-                  },
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          height: 200,
+                          child: _buildChart(startDate, endDate),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-              leftTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  reservedSize: 40,
-                  getTitlesWidget: (value, meta) {
-                    return Text(
-                      '${(value / 1000).toInt()}k',
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.gray400,
+
+              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+              // Categories
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'По категориям',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    );
-                  },
+                      const SizedBox(height: 16),
+                      GlassCard(
+                        padding: const EdgeInsets.all(20),
+                        child: _buildCategoryBreakdown(transactions),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            borderData: FlBorderData(show: false),
-            gridData: const FlGridData(show: false),
-            barGroups: [
-              _buildBarGroup(0, 85000, 42000),
-              _buildBarGroup(1, 78000, 45000),
-              _buildBarGroup(2, 92000, 38000),
-              _buildBarGroup(3, 85000, 42550),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 100)),
             ],
           ),
         ),
@@ -328,23 +246,254 @@ class _AnalyticsTabState extends ConsumerState<AnalyticsTab> {
     );
   }
 
-  BarChartGroupData _buildBarGroup(int x, double income, double expense) {
-    return BarChartGroupData(
-      x: x,
-      barRods: [
-        BarChartRodData(
-          toY: income,
-          color: AppColors.success,
-          width: 16,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+  Widget _buildPeriodButton(String label, String period) {
+    final isSelected = _selectedPeriod == period;
+    return WaterRippleButton(
+      onPressed: () => setState(() => _selectedPeriod = period),
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      gradient: isSelected ? GlassTheme.accentGradient : null,
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
         ),
-        BarChartRodData(
-          toY: expense,
-          color: AppColors.error,
-          width: 16,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard(String label, double amount, IconData icon, Color color) {
+    return GlassContainer(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: color, size: 18),
+              ),
+              const Spacer(),
+              Icon(Icons.more_vert, color: Colors.white.withOpacity(0.5), size: 20),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.7),
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            NumberFormat('#,###').format(amount),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChart(DateTime start, DateTime end) {
+    final transactions = ref.watch(transactionProvider);
+    final periodTransactions = transactions.where((t) {
+      return t.date.isAfter(start) && t.date.isBefore(end);
+    }).toList();
+
+    if (periodTransactions.isEmpty) {
+      return Center(
+        child: Text(
+          'Нет данных за выбранный период',
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.5),
+            fontSize: 14,
+          ),
         ),
-      ],
+      );
+    }
+
+    // Группировка по дням
+    final Map<int, double> incomeByDay = {};
+    final Map<int, double> expenseByDay = {};
+    
+    for (var t in periodTransactions) {
+      final day = t.date.day;
+      if (t.type == TransactionType.income) {
+        incomeByDay[day] = (incomeByDay[day] ?? 0) + t.amount;
+      } else {
+        expenseByDay[day] = (expenseByDay[day] ?? 0) + t.amount;
+      }
+    }
+
+    return LineChart(
+      LineChartData(
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: 10000,
+          getDrawingHorizontalLine: (value) {
+            return FlLine(
+              color: Colors.white.withOpacity(0.1),
+              strokeWidth: 1,
+            );
+          },
+        ),
+        titlesData: FlTitlesData(
+          show: true,
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 30,
+              interval: 5,
+              getTitlesWidget: (value, meta) {
+                return Text(
+                  value.toInt().toString(),
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.5),
+                    fontSize: 10,
+                  ),
+                );
+              },
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              interval: 10000,
+              reservedSize: 40,
+              getTitlesWidget: (value, meta) {
+                return Text(
+                  '${(value / 1000).toInt()}k',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.5),
+                    fontSize: 10,
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        lineBarsData: [
+          // Income line
+          LineChartBarData(
+            spots: incomeByDay.entries
+                .map((e) => FlSpot(e.key.toDouble(), e.value))
+                .toList(),
+            isCurved: true,
+            color: Colors.green,
+            barWidth: 3,
+            isStrokeCapRound: true,
+            dotData: const FlDotData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              color: Colors.green.withOpacity(0.1),
+            ),
+          ),
+          // Expense line
+          LineChartBarData(
+            spots: expenseByDay.entries
+                .map((e) => FlSpot(e.key.toDouble(), e.value))
+                .toList(),
+            isCurved: true,
+            color: Colors.red,
+            barWidth: 3,
+            isStrokeCapRound: true,
+            dotData: const FlDotData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              color: Colors.red.withOpacity(0.1),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryBreakdown(List transactions) {
+    if (transactions.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Text(
+            'Нет транзакций',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.5),
+              fontSize: 14,
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Группировка по категориям
+    final Map<String, double> categoryTotals = {};
+    double totalExpense = 0;
+    
+    for (var t in transactions) {
+      if (t.type == TransactionType.expense) {
+        categoryTotals[t.categoryId] = (categoryTotals[t.categoryId] ?? 0) + t.amount;
+        totalExpense += t.amount;
+      }
+    }
+
+    final sortedCategories = categoryTotals.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    return Column(
+      children: sortedCategories.take(5).map((entry) {
+        final percentage = (entry.value / totalExpense * 100).toStringAsFixed(1);
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    entry.key,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                    ),
+                  ),
+                  Text(
+                    '${NumberFormat('#,###').format(entry.value)} ($percentage%)',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: entry.value / totalExpense,
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF7A3DF2)),
+                  minHeight: 8,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 }
