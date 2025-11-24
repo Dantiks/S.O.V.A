@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sova/core/theme/glass_theme.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 final themeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.dark);
 final accentColorProvider = StateProvider<Color>((ref) => const Color(0xFF7A3DF2));
 final usernameProvider = StateProvider<String>((ref) => 'Пользователь');
 final biometricProvider = StateProvider<bool>((ref) => false);
+final avatarProvider = StateProvider<String?>((ref) => null);
 
 class ProfileTab extends ConsumerWidget {
   const ProfileTab({super.key});
@@ -15,6 +18,7 @@ class ProfileTab extends ConsumerWidget {
     final username = ref.watch(usernameProvider);
     final biometric = ref.watch(biometricProvider);
     final accentColor = ref.watch(accentColorProvider);
+    final avatarPath = ref.watch(avatarProvider);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -45,11 +49,43 @@ class ProfileTab extends ConsumerWidget {
                     boxShadow: GlassTheme.glowShadow,
                     child: Row(
                       children: [
-                        Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
-                          child: const Icon(Icons.person, color: Colors.white, size: 40),
+                        GestureDetector(
+                          onTap: () async {
+                            final ImagePicker picker = ImagePicker();
+                            final XFile? image = await picker.pickImage(source: ImageSource.gallery, maxWidth: 512, maxHeight: 512);
+                            if (image != null) {
+                              ref.read(avatarProvider.notifier).state = image.path;
+                            }
+                          },
+                          child: Stack(
+                            children: [
+                              Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  shape: BoxShape.circle,
+                                  image: avatarPath != null
+                                      ? DecorationImage(image: FileImage(File(avatarPath)), fit: BoxFit.cover)
+                                      : null,
+                                ),
+                                child: avatarPath == null ? const Icon(Icons.person, color: Colors.white, size: 40) : null,
+                              ),
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF7A3DF2),
+                                    shape: BoxShape.circle,
+                                    boxShadow: [BoxShadow(color: const Color(0xFF7A3DF2).withOpacity(0.5), blurRadius: 8)],
+                                  ),
+                                  child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(width: 20),
                         Expanded(
@@ -204,6 +240,57 @@ class ProfileTab extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const Text('Device Activity', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                      const SizedBox(height: 12),
+                      GlassContainer(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Последний вход', style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13)),
+                                    const SizedBox(height: 4),
+                                    Text(DateTime.now().toString().substring(0, 16), style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                                  ],
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(color: Colors.green.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                                  child: const Icon(Icons.check_circle, color: Colors.green, size: 24),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Divider(color: Colors.white.withOpacity(0.1)),
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _DeviceInfoTile(label: 'Устройство', value: 'iPhone', icon: Icons.phone_iphone),
+                                ),
+                                Expanded(
+                                  child: _DeviceInfoTile(label: 'Сессий', value: '1', icon: Icons.devices),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       const Text('Прочее', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
                       const SizedBox(height: 12),
                       GlassCard(
@@ -253,6 +340,27 @@ class _ColorOption extends StatelessWidget {
           Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
         ],
       ),
+    );
+  }
+}
+
+class _DeviceInfoTile extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+
+  const _DeviceInfoTile({required this.label, required this.value, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Icon(icon, color: const Color(0xFF7A3DF2), size: 24),
+        const SizedBox(height: 8),
+        Text(label, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12)),
+        const SizedBox(height: 4),
+        Text(value, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+      ],
     );
   }
 }

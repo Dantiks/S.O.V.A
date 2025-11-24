@@ -139,6 +139,35 @@ class _AnalyticsTabState extends ConsumerState<AnalyticsTab> with SingleTickerPr
                         _buildPeriodChip('Месяц', TimePeriod.month),
                         const SizedBox(width: 6),
                         _buildPeriodChip('Год', TimePeriod.year),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: WaterRippleButton(
+                            onPressed: () async {
+                              final DateTimeRange? picked = await showDateRangePicker(
+                                context: context,
+                                firstDate: DateTime(2020),
+                                lastDate: DateTime.now(),
+                                builder: (context, child) {
+                                  return Theme(
+                                    data: ThemeData.dark().copyWith(
+                                      colorScheme: const ColorScheme.dark(
+                                        primary: Color(0xFF7A3DF2),
+                                        surface: Color(0xFF1a1a2e),
+                                      ),
+                                    ),
+                                    child: child!,
+                                  );
+                                },
+                              );
+                              if (picked != null) {
+                                _changePeriod(TimePeriod.custom);
+                              }
+                            },
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            gradient: _selectedPeriod == TimePeriod.custom ? GlassTheme.accentGradient : null,
+                            child: const Icon(Icons.calendar_today, color: Colors.white, size: 16),
+                          ),
+                        ),
                       ],
                     ),
                   ),
