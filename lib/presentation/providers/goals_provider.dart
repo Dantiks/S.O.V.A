@@ -1,47 +1,48 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sova/domain/entities/savings_goal_entity.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:sova/presentation/providers/transaction_provider.dart';
+import 'package:sova/domain/entities/goal_entity.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:uuid/uuid.dart';
 
-/// Провайдер для управления целями накоплений
-class GoalsNotifier extends StateNotifier<List<SavingsGoalEntity>> {
-  final FirebaseFirestore _firestore;
-  final String userId;
+const _uuid = Uuid();
 
-  GoalsNotifier(this._firestore, this.userId) : super([]) {
-    loadGoals();
+/// Провайдер для управления целями накоплений с Hive
+class GoalsNotifier extends StateNotifier<List<GoalEntity>> {
+  static const String _boxName = 'goals';
+  late Box<Map> _box;
+
+  GoalsNotifier() : super([]) {
+    _init();
   }
 
-  /// Загрузка целей
-  Future<void> loadGoals() async {
+  Future<void> _init() async {
     try {
-      final snapshot = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('goals')
-          .get();
-
-      state = snapshot.docs
-          .map((doc) => SavingsGoalEntity.fromJson({
-                ...doc.data(),
-                'id': doc.id,
-              }))
-          .toList();
+      _box = await Hive.openBox<Map>(_boxName);
+      await loadGoals();
     } catch (e) {
-      print('Ошибка загрузки целей: $e');
+      print('Ошибка инициализации целей: $e');
     }
   }
 
-  /// Добавление цели
-  Future<void> addGoal(SavingsGoalEntity goal) async {
+  /// Загрузка целей из Hive
+  Future<void> loadGoals() async {
     try {
-      final docRef = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('goals')
-          .add(goal.toJson());
+      final goals = _box.values
+          .map((data) => GoalEntity.fromJson(Map<String, dynamic>.from(data)))
+          .toList();
+      state = goals;
+    } catch (e) {
+      print('Ошибка загрузки целей: $e');
+      state = [];
+    }
+  }
 
-      final newGoal = goal.copyWith(id: docRef.id);
+  /// Добавление новой цели
+  Future<void> addGoal(GoalEntity goal) async {
+    try {
+      final id = goal.id.isEmpty ? _uuid.v4() : goal.id;
+      final newGoal = goal.copyWith(id: id);
+      
+      await _box.put(id, newGoal.toJson());
       state = [...state, newGoal];
     } catch (e) {
       print('Ошибка добавления цели: $e');
@@ -50,16 +51,12 @@ class GoalsNotifier extends StateNotifier<List<SavingsGoalEntity>> {
   }
 
   /// Обновление цели
-  Future<void> updateGoal(SavingsGoalEntity goal) async {
+  Future<void> updateGoal(GoalEntity goal) async {
     try {
-      await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('goals')
-          .doc(goal.id)
-          .update(goal.toJson());
-
-      state = state.map((g) => g.id == goal.id ? goal : g).toList();
+      await _box.put(goal.id, goal.toJson());
+      state = state
+          .map((g) => g.id == goal.id ? goal : g)
+          .toList();
     } catch (e) {
       print('Ошибка обновления цели: $e');
       rethrow;
@@ -69,13 +66,7 @@ class GoalsNotifier extends StateNotifier<List<SavingsGoalEntity>> {
   /// Удаление цели
   Future<void> deleteGoal(String goalId) async {
     try {
-      await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('goals')
-          .doc(goalId)
-          .delete();
-
+      await _box.delete(goalId);
       state = state.where((g) => g.id != goalId).toList();
     } catch (e) {
       print('Ошибка удаления цели: $e');
@@ -84,27 +75,37 @@ class GoalsNotifier extends StateNotifier<List<SavingsGoalEntity>> {
   }
 
   /// Добавление средств к цели
-  Future<void> addToGoal(String goalId, double amount) async {
+  Future<void> addFunds(String goalId, double amount) async {
     final goal = state.firstWhere((g) => g.id == goalId);
-    final updatedGoal = goal.copyWith(
-      currentAmount: goal.currentAmount + amount,
-    );
-    await updateGoal(updatedGoal);
+    final newAmount = goal.currentAmount + amount;
+    final isCompleted = newAmount >= goal.targetAmount;
+    
+    await updateGoal(goal.copyWith(
+      currentAmount: newAmount,
+      isCompleted: isCompleted,
+    ));
   }
 
   /// Получение активных целей
-  List<SavingsGoalEntity> getActiveGoals() {
+  List<GoalEntity> getActiveGoals() {
     return state.where((g) => !g.isCompleted).toList();
   }
 
   /// Получение завершенных целей
-  List<SavingsGoalEntity> getCompletedGoals() {
+  List<GoalEntity> getCompletedGoals() {
     return state.where((g) => g.isCompleted).toList();
+  }
+
+  /// Расчет общего прогресса
+  double getTotalProgress() {
+    if (state.isEmpty) return 0.0;
+    final totalCurrent = state.fold(0.0, (sum, g) => sum + g.currentAmount);
+    final totalTarget = state.fold(0.0, (sum, g) => sum + g.targetAmount);
+    return totalTarget > 0 ? (totalCurrent / totalTarget) * 100 : 0.0;
   }
 }
 
 final goalsProvider =
-    StateNotifierProvider<GoalsNotifier, List<SavingsGoalEntity>>((ref) {
-  final userId = ref.watch(currentUserIdProvider);
-  return GoalsNotifier(FirebaseFirestore.instance, userId);
+    StateNotifierProvider<GoalsNotifier, List<GoalEntity>>((ref) {
+  return GoalsNotifier();
 });

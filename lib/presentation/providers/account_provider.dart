@@ -1,47 +1,48 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sova/domain/entities/bank_account_entity.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:sova/presentation/providers/transaction_provider.dart';
+import 'package:sova/domain/entities/account_entity.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:uuid/uuid.dart';
 
-/// Провайдер для управления банковскими счетами
-class AccountNotifier extends StateNotifier<List<BankAccountEntity>> {
-  final FirebaseFirestore _firestore;
-  final String userId;
+const _uuid = Uuid();
 
-  AccountNotifier(this._firestore, this.userId) : super([]) {
-    loadAccounts();
+/// Провайдер для управления банковскими счетами с Hive
+class AccountNotifier extends StateNotifier<List<AccountEntity>> {
+  static const String _boxName = 'accounts';
+  late Box<Map> _box;
+
+  AccountNotifier() : super([]) {
+    _init();
   }
 
-  /// Загрузка счетов
-  Future<void> loadAccounts() async {
+  Future<void> _init() async {
     try {
-      final snapshot = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('accounts')
-          .get();
-
-      state = snapshot.docs
-          .map((doc) => BankAccountEntity.fromJson({
-                ...doc.data(),
-                'id': doc.id,
-              }))
-          .toList();
+      _box = await Hive.openBox<Map>(_boxName);
+      await loadAccounts();
     } catch (e) {
-      print('Ошибка загрузки счетов: $e');
+      print('Ошибка инициализации счетов: $e');
     }
   }
 
-  /// Добавление счета
-  Future<void> addAccount(BankAccountEntity account) async {
+  /// Загрузка счетов из Hive
+  Future<void> loadAccounts() async {
     try {
-      final docRef = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('accounts')
-          .add(account.toJson());
+      final accounts = _box.values
+          .map((data) => AccountEntity.fromJson(Map<String, dynamic>.from(data)))
+          .toList();
+      state = accounts;
+    } catch (e) {
+      print('Ошибка загрузки счетов: $e');
+      state = [];
+    }
+  }
 
-      final newAccount = account.copyWith(id: docRef.id);
+  /// Добавление нового счета
+  Future<void> addAccount(AccountEntity account) async {
+    try {
+      final id = account.id.isEmpty ? _uuid.v4() : account.id;
+      final newAccount = account.copyWith(id: id);
+      
+      await _box.put(id, newAccount.toJson());
       state = [...state, newAccount];
     } catch (e) {
       print('Ошибка добавления счета: $e');
@@ -50,16 +51,12 @@ class AccountNotifier extends StateNotifier<List<BankAccountEntity>> {
   }
 
   /// Обновление счета
-  Future<void> updateAccount(BankAccountEntity account) async {
+  Future<void> updateAccount(AccountEntity account) async {
     try {
-      await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('accounts')
-          .doc(account.id)
-          .update(account.toJson());
-
-      state = state.map((a) => a.id == account.id ? account : a).toList();
+      await _box.put(account.id, account.toJson());
+      state = state
+          .map((a) => a.id == account.id ? account : a)
+          .toList();
     } catch (e) {
       print('Ошибка обновления счета: $e');
       rethrow;
@@ -69,13 +66,7 @@ class AccountNotifier extends StateNotifier<List<BankAccountEntity>> {
   /// Удаление счета
   Future<void> deleteAccount(String accountId) async {
     try {
-      await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('accounts')
-          .doc(accountId)
-          .delete();
-
+      await _box.delete(accountId);
       state = state.where((a) => a.id != accountId).toList();
     } catch (e) {
       print('Ошибка удаления счета: $e');
@@ -83,19 +74,24 @@ class AccountNotifier extends StateNotifier<List<BankAccountEntity>> {
     }
   }
 
-  /// Получение общего баланса всех счетов
+  /// Получение общего баланса
   double getTotalBalance() {
     return state.fold(0.0, (sum, account) => sum + account.balance);
   }
 
   /// Получение счетов по банку
-  List<BankAccountEntity> getByBank(String bankId) {
+  List<AccountEntity> getByBank(String bankId) {
     return state.where((a) => a.bankId == bankId).toList();
+  }
+
+  /// Обновление баланса счета
+  Future<void> updateBalance(String accountId, double newBalance) async {
+    final account = state.firstWhere((a) => a.id == accountId);
+    await updateAccount(account.copyWith(balance: newBalance));
   }
 }
 
 final accountProvider =
-    StateNotifierProvider<AccountNotifier, List<BankAccountEntity>>((ref) {
-  final userId = ref.watch(currentUserIdProvider);
-  return AccountNotifier(FirebaseFirestore.instance, userId);
+    StateNotifierProvider<AccountNotifier, List<AccountEntity>>((ref) {
+  return AccountNotifier();
 });
