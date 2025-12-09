@@ -285,7 +285,7 @@ class _AddBudgetScreenState extends ConsumerState<AddBudgetScreen> {
 
                 // Кнопка сохранения
                 WaterRippleButton(
-                  onPressed: _isLoading ? null : _saveBudget,
+                  onPressed: _isLoading ? null : () => _saveBudget(),
                   gradient: GlassTheme.accentGradient,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: _isLoading
