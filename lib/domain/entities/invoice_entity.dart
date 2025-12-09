@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'invoice_entity.freezed.dart';
-part 'invoice_entity.g.json';
+part 'invoice_entity.g.dart';
 
 enum InvoiceStatus {
   draft, // Черновик

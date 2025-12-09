@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:sova/core/constants/app_colors.dart';
-import 'package:sova/core/constants/app_text_styles.dart';
-import 'package:sova/presentation/providers/auth_provider.dart';
-import 'package:sova/presentation/widgets/glassmorphic_container.dart';
+import 'package:finer/core/constants/app_colors.dart';
+import 'package:finer/core/constants/app_text_styles.dart';
+import 'package:finer/presentation/providers/auth_provider.dart';
+import 'package:finer/presentation/widgets/glassmorphic_container.dart';
 
 class LoginScreen extends ConsumerWidget {
   const LoginScreen({super.key});

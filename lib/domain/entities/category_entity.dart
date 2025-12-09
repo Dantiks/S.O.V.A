@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:sova/domain/entities/transaction_entity.dart';
+import 'package:finer/domain/entities/transaction_entity.dart';
 
 part 'category_entity.freezed.dart';
 part 'category_entity.g.dart';

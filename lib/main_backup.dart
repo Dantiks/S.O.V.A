@@ -3,12 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sova/core/constants/app_colors.dart';
-import 'package:sova/core/router/app_router.dart';
-import 'package:sova/core/services/security_service.dart';
-import 'package:sova/core/services/storage_service.dart';
-import 'package:sova/core/theme/app_theme.dart';
-import 'package:sova/presentation/providers/theme_provider.dart';
+import 'package:finer/core/constants/app_colors.dart';
+import 'package:finer/core/router/app_router.dart';
+import 'package:finer/core/services/security_service.dart';
+import 'package:finer/core/services/storage_service.dart';
+import 'package:finer/core/theme/app_theme.dart';
+import 'package:finer/presentation/providers/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

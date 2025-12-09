@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'family_account_entity.freezed.dart';
-part 'family_account_entity.g.json';
+part 'family_account_entity.g.dart';
 
 enum FamilyRole { admin, member, viewer }
 

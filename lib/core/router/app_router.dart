@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:sova/presentation/screens/splash/splash_screen.dart';
-import 'package:sova/presentation/screens/auth/login_screen.dart';
-import 'package:sova/presentation/screens/home/home_screen.dart';
+import 'package:finer/presentation/screens/splash/splash_screen.dart';
+import 'package:finer/presentation/screens/auth/login_screen.dart';
+import 'package:finer/presentation/screens/home/home_screen.dart';
 
 class AppRouter {
   static const String splash = '/';

@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'business_account_entity.freezed.dart';
-part 'business_account_entity.g.json';
+part 'business_account_entity.g.dart';
 
 enum BusinessType {
   individual, // ИП

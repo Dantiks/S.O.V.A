@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:sova/core/constants/app_colors.dart';
-import 'package:sova/core/constants/app_text_styles.dart';
-import 'package:sova/presentation/screens/splash/widgets/geometric_owl_painter.dart';
+import 'package:finer/core/constants/app_colors.dart';
+import 'package:finer/core/constants/app_text_styles.dart';
+import 'package:finer/presentation/screens/splash/widgets/geometric_owl_painter.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

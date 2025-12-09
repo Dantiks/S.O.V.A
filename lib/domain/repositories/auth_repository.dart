@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:sova/core/utils/result.dart';
-import 'package:sova/domain/entities/user_entity.dart';
+import 'package:finer/core/utils/result.dart';
+import 'package:finer/domain/entities/user_entity.dart';
 
 abstract class AuthRepository {
   Future<Result<UserEntity>> signInWithGoogle();

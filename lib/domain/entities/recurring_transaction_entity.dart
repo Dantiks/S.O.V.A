@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'recurring_transaction_entity.freezed.dart';
-part 'recurring_transaction_entity.g.json';
+part 'recurring_transaction_entity.g.dart';
 
 enum RecurringFrequency {
   daily,

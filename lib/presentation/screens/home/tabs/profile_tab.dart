@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sova/core/theme/glass_theme.dart';
+import 'package:finer/core/theme/glass_theme.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:finer/presentation/providers/auth_provider.dart';
+import 'package:finer/presentation/screens/pin/change_pin_screen.dart';
+import 'package:finer/presentation/screens/settings/about_screen.dart';
+import 'package:finer/presentation/screens/settings/notification_settings_screen.dart';
+import 'package:finer/presentation/screens/settings/export_data_screen.dart';
+import 'package:finer/presentation/screens/settings/settings_screen.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:io';
 
 final themeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.dark);
@@ -33,9 +40,11 @@ class ProfileTab extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Профиль', style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -0.5)),
+                      const Text('Профиль', style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -0.5))
+                          .animate().fadeIn(duration: 400.ms).slideX(begin: -0.2, end: 0),
                       const SizedBox(height: 4),
-                      Text('Персонализация и настройки', style: TextStyle(fontSize: 15, color: Colors.white.withOpacity(0.6))),
+                      Text('Персонализация и настройки', style: TextStyle(fontSize: 15, color: Colors.white.withOpacity(0.6)))
+                          .animate(delay: 100.ms).fadeIn(duration: 400.ms).slideX(begin: -0.2, end: 0),
                     ],
                   ),
                 ),
@@ -44,9 +53,20 @@ class ProfileTab extends ConsumerWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: GlassContainer(
-                    padding: const EdgeInsets.all(24),
-                    gradient: GlassTheme.accentGradient,
-                    boxShadow: GlassTheme.glowShadow,
+                    padding: const EdgeInsets.all(28),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF7A3DF2), Color(0xFF5A2DB2)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF7A3DF2).withOpacity(0.4),
+                        blurRadius: 30,
+                        spreadRadius: 5,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                     child: Row(
                       children: [
                         GestureDetector(
@@ -60,16 +80,27 @@ class ProfileTab extends ConsumerWidget {
                           child: Stack(
                             children: [
                               Container(
-                                width: 80,
-                                height: 80,
+                                width: 90,
+                                height: 90,
                                 decoration: BoxDecoration(
                                   color: Colors.white.withOpacity(0.2),
                                   shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.3),
+                                    width: 3,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.3),
+                                      blurRadius: 15,
+                                      spreadRadius: 2,
+                                    ),
+                                  ],
                                   image: avatarPath != null
                                       ? DecorationImage(image: FileImage(File(avatarPath)), fit: BoxFit.cover)
                                       : null,
                                 ),
-                                child: avatarPath == null ? const Icon(Icons.person, color: Colors.white, size: 40) : null,
+                                child: avatarPath == null ? const Icon(Icons.person, color: Colors.white, size: 45) : null,
                               ),
                               Positioned(
                                 bottom: 0,
@@ -92,9 +123,45 @@ class ProfileTab extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(username, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-                              const SizedBox(height: 6),
-                              Text('Premium Member', style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14)),
+                              Text(
+                                username,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.star,
+                                      color: Colors.amber,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Premium',
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.9),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -136,7 +203,7 @@ class ProfileTab extends ConsumerWidget {
                         ),
                       ],
                     ),
-                  ),
+                  ).animate(delay: 200.ms).fadeIn(duration: 500.ms).slideY(begin: 0.2, end: 0).shimmer(delay: 1000.ms, duration: 2000.ms),
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 24)),
@@ -146,7 +213,13 @@ class ProfileTab extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Безопасность', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                      Row(
+                        children: [
+                          const Icon(Icons.security, color: Color(0xFF7A3DF2), size: 24),
+                          const SizedBox(width: 8),
+                          const Text('Безопасность', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                        ],
+                      ).animate(delay: 300.ms).fadeIn(duration: 400.ms).slideX(begin: -0.2, end: 0),
                       const SizedBox(height: 12),
                       GlassCard(
                         padding: const EdgeInsets.all(4),
@@ -164,6 +237,9 @@ class ProfileTab extends ConsumerWidget {
                               title: const Text('Изменить PIN', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
                               subtitle: Text('Сменить PIN-код', style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13)),
                               trailing: const Icon(Icons.chevron_right, color: Colors.white),
+                              onTap: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangePinScreen()));
+                              },
                             ),
                           ],
                         ),
@@ -179,7 +255,13 @@ class ProfileTab extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Внешний вид', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                      Row(
+                        children: [
+                          const Icon(Icons.palette, color: Color(0xFF7A3DF2), size: 24),
+                          const SizedBox(width: 8),
+                          const Text('Внешний вид', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                        ],
+                      ).animate(delay: 400.ms).fadeIn(duration: 400.ms).slideX(begin: -0.2, end: 0),
                       const SizedBox(height: 12),
                       GlassCard(
                         padding: const EdgeInsets.all(4),
@@ -240,7 +322,13 @@ class ProfileTab extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Device Activity', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                      Row(
+                        children: [
+                          const Icon(Icons.devices, color: Color(0xFF7A3DF2), size: 24),
+                          const SizedBox(width: 8),
+                          const Text('Активность устройства', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                        ],
+                      ).animate(delay: 500.ms).fadeIn(duration: 400.ms).slideX(begin: -0.2, end: 0),
                       const SizedBox(height: 12),
                       GlassContainer(
                         padding: const EdgeInsets.all(20),
@@ -291,21 +379,163 @@ class ProfileTab extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Прочее', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                      Row(
+                        children: [
+                          const Icon(Icons.settings, color: Color(0xFF7A3DF2), size: 24),
+                          const SizedBox(width: 8),
+                          const Text('Быстрый доступ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                        ],
+                      ).animate(delay: 600.ms).fadeIn(duration: 400.ms).slideX(begin: -0.2, end: 0),
                       const SizedBox(height: 12),
                       GlassCard(
                         padding: const EdgeInsets.all(4),
                         child: Column(
                           children: [
-                            ListTile(leading: Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.notifications, color: Colors.white, size: 22)), title: const Text('Уведомления', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)), subtitle: Text('Настройка уведомлений', style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13)), trailing: const Icon(Icons.chevron_right, color: Colors.white)),
+                            ListTile(
+                              leading: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [Color(0xFF7A3DF2), Color(0xFF5A2DB2)],
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFF7A3DF2).withOpacity(0.3),
+                                      blurRadius: 8,
+                                      spreadRadius: 1,
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(Icons.settings, color: Colors.white, size: 24),
+                              ),
+                              title: const Text(
+                                'Настройки',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              subtitle: Text(
+                                'Настройка приложения',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.6),
+                                  fontSize: 13,
+                                ),
+                              ),
+                              trailing: const Icon(Icons.chevron_right, color: Colors.white),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                                );
+                              },
+                            ),
                             Divider(color: Colors.white.withOpacity(0.1), height: 1),
-                            ListTile(leading: Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.download, color: Colors.white, size: 22)), title: const Text('Экспорт данных', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)), subtitle: Text('CSV/PDF экспорт', style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13)), trailing: const Icon(Icons.chevron_right, color: Colors.white)),
+                            ListTile(
+                              leading: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(Icons.shield, color: Colors.green, size: 24),
+                              ),
+                              title: const Text('Безопасность', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
+                              subtitle: Text('PIN и биометрия', style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13)),
+                              trailing: const Icon(Icons.chevron_right, color: Colors.white),
+                              onTap: () {
+                                // Scroll to security section or navigate
+                              },
+                            ),
                             Divider(color: Colors.white.withOpacity(0.1), height: 1),
-                            ListTile(leading: Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.info, color: Colors.white, size: 22)), title: const Text('О приложении', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)), subtitle: Text('S.O.V.A v2.0.0', style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13)), trailing: const Icon(Icons.chevron_right, color: Colors.white)),
+                            ListTile(
+                              leading: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(Icons.help_outline, color: Colors.orange, size: 24),
+                              ),
+                              title: const Text('Помощь', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
+                              subtitle: Text('FAQ и поддержка', style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13)),
+                              trailing: const Icon(Icons.chevron_right, color: Colors.white),
+                              onTap: () {
+                                // TODO: Open help screen
+                              },
+                            ),
+                            Divider(color: Colors.white.withOpacity(0.1), height: 1),
+                            ListTile(
+                              leading: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(Icons.info, color: Colors.blue, size: 24),
+                              ),
+                              title: const Text('О приложении', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
+                              subtitle: Text('FINER v1.0.0', style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13)),
+                              trailing: const Icon(Icons.chevron_right, color: Colors.white),
+                              onTap: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const AboutScreen()));
+                              },
+                            ),
                           ],
                         ),
                       ),
                     ],
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Consumer(
+                    builder: (context, ref, _) {
+                      return WaterRippleButton(
+                        onPressed: () async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              backgroundColor: const Color(0xFF1a1a2e),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                              title: const Text('Выйти из аккаунта?', style: TextStyle(color: Colors.white)),
+                              content: const Text('Вы уверены, что хотите выйти?', style: TextStyle(color: Colors.white70)),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, false),
+                                  child: const Text('Отмена'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const Text('Выйти', style: TextStyle(color: Colors.red)),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirm == true && context.mounted) {
+                            await ref.read(authControllerProvider.notifier).signOut();
+                            if (context.mounted) {
+                              Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                            }
+                          }
+                        },
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        gradient: const LinearGradient(colors: [Colors.red, Color(0xFFC62828)]),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.logout, color: Colors.white),
+                            SizedBox(width: 12),
+                            Text('Выйти из аккаунта', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),

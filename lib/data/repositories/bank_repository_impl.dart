@@ -1,8 +1,8 @@
-import 'package:sova/core/utils/result.dart';
-import 'package:sova/data/datasources/bank_remote_datasource.dart';
-import 'package:sova/domain/entities/bank_account_entity.dart';
-import 'package:sova/domain/entities/transaction_entity.dart';
-import 'package:sova/domain/repositories/bank_repository.dart';
+import 'package:finer/core/utils/result.dart';
+import 'package:finer/data/datasources/bank_remote_datasource.dart';
+import 'package:finer/domain/entities/bank_account_entity.dart';
+import 'package:finer/domain/entities/transaction_entity.dart';
+import 'package:finer/domain/repositories/bank_repository.dart';
 
 class BankRepositoryImpl implements BankRepository {
   final BankRemoteDataSource _remoteDataSource;

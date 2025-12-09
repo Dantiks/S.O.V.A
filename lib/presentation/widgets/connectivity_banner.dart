@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:sova/core/services/connectivity_service.dart';
-import 'package:sova/core/services/sync_service.dart';
+import 'package:finer/core/services/connectivity_service.dart';
+import 'package:finer/core/services/sync_service.dart';
 
 /// Banner showing connectivity status
 class ConnectivityBanner extends ConsumerWidget {

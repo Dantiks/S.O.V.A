@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sova/domain/entities/family_account_entity.dart';
+import 'package:finer/domain/entities/family_account_entity.dart';
 
 class FamilyBudgetScreen extends ConsumerWidget {
   const FamilyBudgetScreen({super.key});

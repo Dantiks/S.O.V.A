@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sova/core/theme/glass_theme.dart';
-import 'package:sova/domain/entities/transaction_entity.dart';
-import 'package:sova/presentation/providers/transaction_provider.dart';
-import 'package:sova/presentation/providers/account_provider.dart';
+import 'package:finer/core/theme/glass_theme.dart';
+import 'package:finer/domain/entities/transaction_entity.dart';
+import 'package:finer/presentation/providers/transaction_provider.dart';
+import 'package:finer/presentation/providers/account_provider.dart';
 
 class AddTransactionScreen extends ConsumerStatefulWidget {
   final TransactionEntity? transaction; // Для редактирования

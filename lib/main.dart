@@ -1,14 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:sova/core/services/openai_service.dart';
-import 'package:sova/core/services/demo_ai_service.dart';
-import 'package:sova/core/services/currency_service.dart';
-import 'package:sova/core/services/security_service.dart';
-import 'package:sova/presentation/screens/pin/setup_pin_screen.dart';
-import 'package:sova/presentation/screens/pin/enter_pin_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:finer/core/services/openai_service.dart';
+import 'package:finer/core/services/demo_ai_service.dart';
+import 'package:finer/core/services/currency_service.dart';
+import 'package:finer/core/services/security_service.dart';
+import 'package:finer/core/services/notification_service.dart';
+import 'package:finer/presentation/screens/pin/setup_pin_screen.dart';
+import 'package:finer/presentation/screens/pin/enter_pin_screen.dart';
+import 'package:finer/presentation/screens/onboarding/onboarding_improved_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Firebase
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print('✅ Firebase initialized');
+  } catch (e) {
+    print('⚠️ Firebase initialization error: $e');
+  }
+  
+  // Initialize Notification Service
+  try {
+    final notificationService = NotificationService();
+    await notificationService.initialize();
+    print('✅ Notification Service initialized');
+  } catch (e) {
+    print('⚠️ Notification Service error: $e');
+  }
   
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
@@ -88,44 +112,76 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   }
 
   Future<void> _checkPinAndNavigate() async {
-    final securityService = SecurityService();
-    final hasPinCode = await securityService.hasPinCode();
+    final prefs = await SharedPreferences.getInstance();
+    final isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
     
     if (!mounted) return;
     
     final navigator = Navigator.of(context);
     
-    if (hasPinCode) {
-      // PIN уже установлен - показываем экран ввода
+    if (isFirstLaunch) {
+      // Первый запуск - показываем onboarding
+      await prefs.setBool('isFirstLaunch', false);
       navigator.pushReplacement(
         MaterialPageRoute(
-          builder: (context) => EnterPinScreen(
-            onSuccess: () {
+          builder: (context) => OnboardingImprovedScreen(
+            onComplete: () {
               if (context.mounted) {
                 Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => const HomeScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => SetupPinScreen(
+                      onPinSet: () {
+                        if (context.mounted) {
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(builder: (_) => const HomeScreen()),
+                          );
+                        }
+                      },
+                    ),
+                  ),
                 );
               }
             },
-            canUseBiometric: true,
           ),
         ),
       );
     } else {
-      // PIN не установлен - показываем экран настройки
-      navigator.pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => SetupPinScreen(
-            onPinSet: () {
-              if (context.mounted) {
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => const HomeScreen()),
-                );
-              }
-            },
+      // Не первый запуск - проверяем PIN
+      final securityService = SecurityService();
+      final hasPinCode = await securityService.hasPinCode();
+      
+      if (hasPinCode) {
+        // PIN уже установлен - показываем экран ввода
+        navigator.pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => EnterPinScreen(
+              onSuccess: () {
+                if (context.mounted) {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => const HomeScreen()),
+                  );
+                }
+              },
+              canUseBiometric: true,
+            ),
           ),
-        ),
-      );
+        );
+      } else {
+        // PIN не установлен - показываем экран настройки
+        navigator.pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => SetupPinScreen(
+              onPinSet: () {
+                if (context.mounted) {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => const HomeScreen()),
+                  );
+                }
+              },
+            ),
+          ),
+        );
+      }
     }
   }
 

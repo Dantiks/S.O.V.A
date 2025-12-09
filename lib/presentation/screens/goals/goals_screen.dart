@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sova/core/theme/glass_theme.dart';
-import 'package:sova/presentation/providers/goals_provider.dart';
-import 'package:sova/presentation/screens/goals/add_goal_screen.dart';
+import 'package:finer/core/theme/glass_theme.dart';
+import 'package:finer/presentation/providers/goals_provider.dart';
+import 'package:finer/presentation/screens/goals/add_goal_screen.dart';
 import 'package:intl/intl.dart';
 
 class GoalsScreen extends ConsumerWidget {

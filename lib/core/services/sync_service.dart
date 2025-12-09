@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sova/core/services/cache_service.dart';
-import 'package:sova/core/services/connectivity_service.dart';
+import 'package:finer/core/services/cache_service.dart';
+import 'package:finer/core/services/connectivity_service.dart';
 
 /// Queue item for offline operations
 class SyncQueueItem {

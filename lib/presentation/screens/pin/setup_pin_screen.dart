@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sova/core/services/security_service.dart';
+import 'package:finer/core/services/security_service.dart';
 
 class SetupPinScreen extends StatefulWidget {
   final VoidCallback onPinSet;

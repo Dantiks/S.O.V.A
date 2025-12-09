@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:sova/core/constants/app_colors.dart';
+import 'package:finer/core/constants/app_colors.dart';
 
 class GlassmorphicContainer extends StatelessWidget {
   final Widget child;

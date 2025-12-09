@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sova/core/theme/glass_theme.dart';
-import 'package:sova/domain/entities/account_entity.dart';
-import 'package:sova/presentation/providers/account_provider.dart';
-import 'package:sova/presentation/providers/transaction_provider.dart';
-import 'package:sova/presentation/screens/accounts/add_account_screen.dart';
+import 'package:finer/core/theme/glass_theme.dart';
+import 'package:finer/domain/entities/account_entity.dart';
+import 'package:finer/presentation/providers/account_provider.dart';
+import 'package:finer/presentation/providers/transaction_provider.dart';
+import 'package:finer/presentation/screens/accounts/add_account_screen.dart';
 import 'package:intl/intl.dart';
 
 class AccountDetailScreen extends ConsumerStatefulWidget {

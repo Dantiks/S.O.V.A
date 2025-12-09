@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sova/core/theme/glass_theme.dart';
-import 'package:sova/presentation/providers/account_provider.dart';
-import 'package:sova/presentation/screens/accounts/add_account_screen.dart';
-import 'package:sova/presentation/screens/accounts/account_detail_screen.dart';
+import 'package:finer/core/theme/glass_theme.dart';
+import 'package:finer/presentation/providers/account_provider.dart';
+import 'package:finer/presentation/screens/accounts/add_account_screen.dart';
+import 'package:finer/presentation/screens/accounts/account_detail_screen.dart';
 import 'package:intl/intl.dart';
 
 class AccountsTab extends ConsumerWidget {
@@ -70,50 +70,84 @@ class AccountsTab extends ConsumerWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: GlassContainer(
-                    padding: const EdgeInsets.all(28),
+                    padding: const EdgeInsets.all(32),
                     gradient: GlassTheme.accentGradient,
                     boxShadow: GlassTheme.glowShadow,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(Icons.account_balance_wallet, color: Colors.white, size: 24),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Общий баланс', style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 14)),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    '${NumberFormat('#,###').format(totalBalance)} сом',
-                                    style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
+                        // Иконка
                         Container(
-                          padding: const EdgeInsets.all(14),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.account_balance_wallet,
+                            color: Colors.white,
+                            size: 32,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Заголовок
+                        Text(
+                          'Общий баланс',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        // Баланс - большой и заметный
+                        Text(
+                          '${NumberFormat('#,###').format(totalBalance)}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 48,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: -1,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'сом',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.8),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        // Дополнительная информация
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 14,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.15),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.account_balance, color: Colors.white, size: 18),
+                              const Icon(
+                                Icons.account_balance,
+                                color: Colors.white,
+                                size: 18,
+                              ),
                               const SizedBox(width: 12),
-                              Text('Активных счетов: ${accounts.length}', style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500)),
+                              Text(
+                                'Активных счетов: ${accounts.length}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
                             ],
                           ),
                         ),

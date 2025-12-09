@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sova/domain/entities/transaction_entity.dart';
-import 'package:sova/presentation/widgets/transaction_card.dart';
+import 'package:finer/domain/entities/transaction_entity.dart';
+import 'package:finer/presentation/widgets/transaction_card.dart';
 
 void main() {
   group('TransactionCard Widget Tests', () {

@@ -2,10 +2,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:sova/data/repositories/auth_repository_impl.dart';
-import 'package:sova/data/datasources/auth_remote_datasource.dart';
-import 'package:sova/domain/entities/user_entity.dart';
-import 'package:sova/core/utils/failure.dart';
+import 'package:finer/data/repositories/auth_repository_impl.dart';
+import 'package:finer/data/datasources/auth_remote_datasource.dart';
+import 'package:finer/domain/entities/user_entity.dart';
+import 'package:finer/core/utils/failure.dart';
 
 @GenerateMocks([AuthRemoteDataSource])
 import 'auth_repository_test.mocks.dart';

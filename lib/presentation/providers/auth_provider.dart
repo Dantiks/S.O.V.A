@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:sova/core/utils/result.dart';
-import 'package:sova/data/datasources/auth_remote_datasource.dart';
-import 'package:sova/data/repositories/auth_repository_impl.dart';
-import 'package:sova/domain/entities/user_entity.dart';
-import 'package:sova/domain/repositories/auth_repository.dart';
+import 'package:finer/core/utils/result.dart';
+import 'package:finer/data/datasources/auth_remote_datasource.dart';
+import 'package:finer/data/repositories/auth_repository_impl.dart';
+import 'package:finer/domain/entities/user_entity.dart';
+import 'package:finer/domain/repositories/auth_repository.dart';
 
 // Repository Provider
 final authRepositoryProvider = Provider<AuthRepository>((ref) {

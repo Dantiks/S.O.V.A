@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sova/core/constants/app_constants.dart';
+import 'package:finer/core/constants/app_constants.dart';
 
 enum AppThemeMode {
   light,

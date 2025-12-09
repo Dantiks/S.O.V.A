@@ -1,5 +1,5 @@
-name: sova
-description: S.O.V.A - Smart Omniscient Virtual Assistant for Kyrgyzstan banks
+name: finer
+description: FINER - Ваш умный финансовый помощник для управления деньгами
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -39,9 +39,9 @@ dependencies:
   google_sign_in: ^6.2.1
   cloud_firestore: ^4.13.6
   firebase_analytics: ^10.7.4
-  # firebase_messaging: ^14.7.9
-  # firebase_crashlytics: ^3.4.9
-  # flutter_local_notifications: ^16.3.0
+  firebase_messaging: ^14.7.9
+  firebase_crashlytics: ^3.4.9
+  flutter_local_notifications: ^17.2.2
   
   # Security
   local_auth: ^2.1.8
@@ -89,7 +89,10 @@ dependencies:
   
   # OCR
   # google_mlkit_text_recognition: ^0.11.0
-  # image_picker: ^1.0.7
+  image_picker: ^1.0.7
+  
+  # Sharing
+  share_plus: ^7.2.2
   
   # Icons
   cupertino_icons: ^1.0.6

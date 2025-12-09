@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sova/core/theme/glass_theme.dart';
-import 'package:sova/presentation/providers/transaction_provider.dart';
-import 'package:sova/presentation/screens/transactions/add_transaction_screen.dart';
+import 'package:finer/core/theme/glass_theme.dart';
+import 'package:finer/presentation/providers/transaction_provider.dart';
+import 'package:finer/presentation/screens/transactions/add_transaction_screen.dart';
 import 'package:intl/intl.dart';
 
 class SearchTransactionsScreen extends ConsumerStatefulWidget {

@@ -1,12 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sova/domain/entities/account_entity.dart';
+import 'package:finer/domain/entities/bank_account_entity.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 const _uuid = Uuid();
 
 /// Провайдер для управления банковскими счетами с Hive
-class AccountNotifier extends StateNotifier<List<AccountEntity>> {
+class AccountNotifier extends StateNotifier<List<BankAccountEntity>> {
   static const String _boxName = 'accounts';
   late Box<Map> _box;
 
@@ -27,7 +27,7 @@ class AccountNotifier extends StateNotifier<List<AccountEntity>> {
   Future<void> loadAccounts() async {
     try {
       final accounts = _box.values
-          .map((data) => AccountEntity.fromJson(Map<String, dynamic>.from(data)))
+          .map((data) => BankAccountEntity.fromJson(Map<String, dynamic>.from(data)))
           .toList();
       state = accounts;
     } catch (e) {
@@ -37,7 +37,7 @@ class AccountNotifier extends StateNotifier<List<AccountEntity>> {
   }
 
   /// Добавление нового счета
-  Future<void> addAccount(AccountEntity account) async {
+  Future<void> addAccount(BankAccountEntity account) async {
     try {
       final id = account.id.isEmpty ? _uuid.v4() : account.id;
       final newAccount = account.copyWith(id: id);
@@ -51,7 +51,7 @@ class AccountNotifier extends StateNotifier<List<AccountEntity>> {
   }
 
   /// Обновление счета
-  Future<void> updateAccount(AccountEntity account) async {
+  Future<void> updateAccount(BankAccountEntity account) async {
     try {
       await _box.put(account.id, account.toJson());
       state = state
@@ -80,8 +80,41 @@ class AccountNotifier extends StateNotifier<List<AccountEntity>> {
   }
 
   /// Получение счетов по банку
-  List<AccountEntity> getByBank(String bankId) {
-    return state.where((a) => a.bankId == bankId).toList();
+  List<BankAccountEntity> getByBank(String bankName) {
+    return state.where((a) => a.bankName == bankName).toList();
+  }
+  
+  /// Получение активных счетов
+  List<BankAccountEntity> getActiveAccounts() {
+    return state.where((a) => a.isActive).toList();
+  }
+  
+  /// Получение основного счета
+  BankAccountEntity? getPrimaryAccount() {
+    try {
+      return state.firstWhere((a) => a.isPrimary);
+    } catch (e) {
+      return null;
+    }
+  }
+  
+  /// Установить счет как основной
+  Future<void> setPrimaryAccount(String accountId) async {
+    try {
+      // Снять флаг primary со всех счетов
+      for (final account in state) {
+        if (account.isPrimary) {
+          await updateAccount(account.copyWith(isPrimary: false));
+        }
+      }
+      
+      // Установить флаг primary для выбранного счета
+      final account = state.firstWhere((a) => a.id == accountId);
+      await updateAccount(account.copyWith(isPrimary: true));
+    } catch (e) {
+      print('Ошибка установки основного счета: $e');
+      rethrow;
+    }
   }
 
   /// Обновление баланса счета
@@ -92,6 +125,6 @@ class AccountNotifier extends StateNotifier<List<AccountEntity>> {
 }
 
 final accountProvider =
-    StateNotifierProvider<AccountNotifier, List<AccountEntity>>((ref) {
+    StateNotifierProvider<AccountNotifier, List<BankAccountEntity>>((ref) {
   return AccountNotifier();
 });

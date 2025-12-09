@@ -194,4 +194,88 @@ class SecurityService {
     // This is a placeholder for production implementation
     return true;
   }
+
+  // Failed Login Attempts Management
+  static const String _failedAttemptsKey = 'failed_attempts';
+  static const String _lockoutTimeKey = 'lockout_time';
+  static const int _maxFailedAttempts = 5;
+  static const Duration _lockoutDuration = Duration(minutes: 15);
+
+  /// Получить количество неудачных попыток входа
+  Future<int> get failedAttempts async {
+    final attemptsStr = await _secureStorage.read(key: _failedAttemptsKey);
+    return int.tryParse(attemptsStr ?? '0') ?? 0;
+  }
+
+  /// Записать неудачную попытку входа
+  Future<void> recordFailedAttempt() async {
+    final currentAttempts = await failedAttempts;
+    final newAttempts = currentAttempts + 1;
+    
+    await _secureStorage.write(
+      key: _failedAttemptsKey,
+      value: newAttempts.toString(),
+    );
+
+    // Если достигнут лимит, блокируем аккаунт
+    if (newAttempts >= _maxFailedAttempts) {
+      final lockoutTime = DateTime.now().add(_lockoutDuration);
+      await _secureStorage.write(
+        key: _lockoutTimeKey,
+        value: lockoutTime.toIso8601String(),
+      );
+    }
+  }
+
+  /// Сбросить счетчик неудачных попыток
+  Future<void> resetFailedAttempts() async {
+    await _secureStorage.delete(key: _failedAttemptsKey);
+    await _secureStorage.delete(key: _lockoutTimeKey);
+  }
+
+  /// Проверить, заблокирован ли аккаунт
+  Future<bool> isAccountLocked() async {
+    final lockoutTimeStr = await _secureStorage.read(key: _lockoutTimeKey);
+    if (lockoutTimeStr == null) return false;
+
+    try {
+      final lockoutTime = DateTime.parse(lockoutTimeStr);
+      final now = DateTime.now();
+
+      if (now.isBefore(lockoutTime)) {
+        return true;
+      } else {
+        // Время блокировки истекло, сбрасываем
+        await resetFailedAttempts();
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Получить оставшееся время блокировки
+  Future<Duration?> getRemainingLockoutTime() async {
+    final lockoutTimeStr = await _secureStorage.read(key: _lockoutTimeKey);
+    if (lockoutTimeStr == null) return null;
+
+    try {
+      final lockoutTime = DateTime.parse(lockoutTimeStr);
+      final now = DateTime.now();
+
+      if (now.isBefore(lockoutTime)) {
+        return lockoutTime.difference(now);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Получить количество оставшихся попыток
+  Future<int> getRemainingAttempts() async {
+    final attempts = await failedAttempts;
+    final remaining = _maxFailedAttempts - attempts;
+    return remaining > 0 ? remaining : 0;
+  }
 }

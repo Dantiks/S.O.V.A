@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:sova/core/config/env_config.dart';
+import 'package:finer/core/config/env_config.dart';
 
 class CurrencyService {
   final Dio _dio = Dio();

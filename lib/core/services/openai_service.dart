@@ -1,5 +1,5 @@
 import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
-import 'package:sova/core/config/env_config.dart';
+import 'package:finer/core/config/env_config.dart';
 
 class OpenAIService {
   late final OpenAI _openAI;

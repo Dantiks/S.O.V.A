@@ -1,6 +1,6 @@
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:sova/core/constants/app_constants.dart';
-import 'package:sova/core/services/security_service.dart';
+import 'package:finer/core/constants/app_constants.dart';
+import 'package:finer/core/services/security_service.dart';
 
 class StorageService {
   final SecurityService _securityService;

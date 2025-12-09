@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sova/core/theme/glass_theme.dart';
-import 'package:sova/presentation/providers/recurring_provider.dart';
-import 'package:sova/domain/entities/recurring_transaction_entity.dart';
+import 'package:finer/core/theme/glass_theme.dart';
+import 'package:finer/presentation/providers/recurring_provider.dart';
+import 'package:finer/domain/entities/recurring_transaction_entity.dart';
 import 'package:intl/intl.dart';
 
 class RecurringScreen extends ConsumerWidget {

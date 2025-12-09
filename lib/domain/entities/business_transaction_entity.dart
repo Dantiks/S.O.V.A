@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'business_transaction_entity.freezed.dart';
-part 'business_transaction_entity.g.json';
+part 'business_transaction_entity.g.dart';
 
 enum TransactionType {
   income, // Доход

@@ -1,12 +1,14 @@
 import 'dart:io';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
+// import 'package:pdf/pdf.dart';
+// import 'package:pdf/widgets.dart' as pw;
+// import 'package:printing/printing.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:csv/csv.dart';
 import 'package:intl/intl.dart';
 
 class ExportService {
+  // PDF export закомментирован, т.к. зависимости не установлены
+  /*
   Future<File> exportTransactionsToPDF({
     required List<Map<String, dynamic>> transactions,
     required String title,
@@ -70,11 +72,15 @@ class ExportService {
     return file;
   }
 
+  */
+  
   Future<void> printPDF(File pdfFile) async {
-    await Printing.layoutPdf(onLayout: (_) => pdfFile.readAsBytes());
+    // await Printing.layoutPdf(onLayout: (_) => pdfFile.readAsBytes());
+    throw UnimplementedError('PDF printing requires pdf and printing packages');
   }
 
   Future<void> sharePDF(File pdfFile) async {
-    await Printing.sharePdf(bytes: await pdfFile.readAsBytes(), filename: 'sova_report.pdf');
+    // await Printing.sharePdf(bytes: await pdfFile.readAsBytes(), filename: 'sova_report.pdf');
+    throw UnimplementedError('PDF sharing requires pdf and printing packages');
   }
 }

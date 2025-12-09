@@ -1,5 +1,5 @@
 import 'package:home_widget/home_widget.dart';
-import 'package:sova/core/constants/app_constants.dart';
+import 'package:finer/core/constants/app_constants.dart';
 
 class WidgetService {
   static Future<void> updateBalanceWidget({

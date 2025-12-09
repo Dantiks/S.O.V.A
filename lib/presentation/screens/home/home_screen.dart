@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sova/core/constants/app_colors.dart';
-import 'package:sova/presentation/screens/home/tabs/dashboard_tab.dart';
-import 'package:sova/presentation/screens/home/tabs/accounts_tab.dart';
-import 'package:sova/presentation/screens/home/tabs/chat_tab.dart';
-import 'package:sova/presentation/screens/home/tabs/analytics_tab.dart';
-import 'package:sova/presentation/screens/home/tabs/profile_tab.dart';
+import 'package:finer/core/constants/app_colors.dart';
+import 'package:finer/presentation/screens/home/tabs/dashboard_tab.dart';
+import 'package:finer/presentation/screens/home/tabs/accounts_tab.dart';
+import 'package:finer/presentation/screens/home/tabs/chat_tab.dart';
+import 'package:finer/presentation/screens/home/tabs/analytics_tab.dart';
+import 'package:finer/presentation/screens/home/tabs/profile_tab.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});

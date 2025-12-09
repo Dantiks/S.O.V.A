@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sova/core/theme/glass_theme.dart';
-import 'package:sova/presentation/providers/transaction_provider.dart';
+import 'package:finer/core/theme/glass_theme.dart';
+import 'package:finer/presentation/providers/transaction_provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 
@@ -18,6 +18,7 @@ class _AnalyticsTabState extends ConsumerState<AnalyticsTab> with SingleTickerPr
   TimePeriod _selectedPeriod = TimePeriod.month;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  int _animationKey = 0;
 
   @override
   void initState() {
@@ -40,7 +41,10 @@ class _AnalyticsTabState extends ConsumerState<AnalyticsTab> with SingleTickerPr
 
   void _changePeriod(TimePeriod period) {
     if (_selectedPeriod != period) {
-      setState(() => _selectedPeriod = period);
+      setState(() {
+        _selectedPeriod = period;
+        _animationKey++; // Изменяем ключ для принудительного обновления
+      });
       _animationController.reset();
       _animationController.forward();
     }
@@ -115,10 +119,11 @@ class _AnalyticsTabState extends ConsumerState<AnalyticsTab> with SingleTickerPr
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Глубокий анализ ваших финансов',
+                        _getPeriodText(),
                         style: TextStyle(
                           fontSize: 15,
-                          color: Colors.white.withOpacity(0.6),
+                          color: const Color(0xFF7A3DF2),
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -179,6 +184,7 @@ class _AnalyticsTabState extends ConsumerState<AnalyticsTab> with SingleTickerPr
               // Animated Content
               SliverToBoxAdapter(
                 child: FadeTransition(
+                  key: ValueKey(_animationKey), // Ключ для перестроения при смене периода
                   opacity: _fadeAnimation,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -240,6 +246,19 @@ class _AnalyticsTabState extends ConsumerState<AnalyticsTab> with SingleTickerPr
     );
   }
 
+  String _getPeriodText() {
+    switch (_selectedPeriod) {
+      case TimePeriod.week:
+        return 'Анализ за последние 7 дней';
+      case TimePeriod.month:
+        return 'Анализ за текущий месяц';
+      case TimePeriod.year:
+        return 'Анализ за текущий год';
+      case TimePeriod.custom:
+        return 'Анализ за выбранный период';
+    }
+  }
+
   Widget _buildBalanceCard(double income, double expense, double balance) {
     return GlassContainer(
       padding: const EdgeInsets.all(24),
@@ -275,12 +294,35 @@ class _AnalyticsTabState extends ConsumerState<AnalyticsTab> with SingleTickerPr
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      balance >= 0 ? 'Профицит' : 'Дефицит',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 14,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          balance >= 0 ? 'Профицит' : 'Дефицит',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _getPeriodLabel(),
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -589,6 +631,19 @@ class _AnalyticsTabState extends ConsumerState<AnalyticsTab> with SingleTickerPr
         ],
       ),
     );
+  }
+
+  String _getPeriodLabel() {
+    switch (_selectedPeriod) {
+      case TimePeriod.week:
+        return 'Неделя';
+      case TimePeriod.month:
+        return 'Месяц';
+      case TimePeriod.year:
+        return 'Год';
+      case TimePeriod.custom:
+        return 'Период';
+    }
   }
 
   Widget _buildFinancialHealthScore(double income, double expense) {

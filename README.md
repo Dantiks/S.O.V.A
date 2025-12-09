@@ -1,9 +1,9 @@
-# S.O.V.A - AI-Powered Financial Assistant
+# FINER - AI-Powered Financial Assistant
 
 <div align="center">
-  <img src="assets/images/logo.png" alt="S.O.V.A Logo" width="200"/>
+  <img src="assets/images/logo.png" alt="FINER Logo" width="200"/>
   
-  **Ваш персональный финансовый ассистент с искусственным интеллектом**
+  **Ваш умный финансовый помощник для управления деньгами**
   
   [![Flutter](https://img.shields.io/badge/Flutter-3.16+-02569B?logo=flutter)](https://flutter.dev)
   [![Dart](https://img.shields.io/badge/Dart-3.2+-0175C2?logo=dart)](https://dart.dev)
@@ -14,7 +14,7 @@
 
 ## 📱 О приложении
 
-**S.O.V.A** — это революционное финансовое приложение для пользователей Кыргызстана, которое объединяет все ваши банковские счета в одном месте и использует искусственный интеллект для анализа финансов и предоставления персональных рекомендаций.
+**FINER** — это умный финансовый помощник для пользователей Кыргызстана, который объединяет все ваши банковские счета в одном месте и использует искусственный интеллект для анализа финансов и предоставления персональных рекомендаций.
 
 ### ✨ Ключевые возможности
 
@@ -321,5 +321,5 @@ flutter build ios --release
 <div align="center">
   Made with ❤️ in Kyrgyzstan
   
-  **S.O.V.A** © 2024
+  **FINER** © 2024
 </div>

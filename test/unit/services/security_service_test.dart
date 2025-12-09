@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sova/core/services/security_service.dart';
+import 'package:finer/core/services/security_service.dart';
 
 void main() {
   group('SecurityService', () {

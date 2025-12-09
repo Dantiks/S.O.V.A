@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'savings_goal_entity.freezed.dart';
-part 'savings_goal_entity.g.json';
+part 'savings_goal_entity.g.dart';
 
 @freezed
 class SavingsGoalEntity with _$SavingsGoalEntity {

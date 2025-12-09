@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sova/core/services/openai_service.dart';
-// import 'package:sova/core/services/speech_service.dart';
-import 'package:sova/domain/entities/chat_message_entity.dart';
+import 'package:finer/core/services/openai_service.dart';
+// import 'package:finer/core/services/speech_service.dart';
+import 'package:finer/domain/entities/chat_message_entity.dart';
 
 // Services
 final aiServiceProvider = Provider<OpenAIService>((ref) => OpenAIService());

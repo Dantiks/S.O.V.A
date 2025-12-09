@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:sova/core/theme/glass_theme.dart';
+import 'package:finer/core/theme/glass_theme.dart';
 
 class OnboardingImprovedScreen extends StatefulWidget {
   final VoidCallback onComplete;
