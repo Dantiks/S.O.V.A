@@ -192,22 +192,26 @@ class _DashboardTabState extends ConsumerState<DashboardTab> {
                         .animate()
                         .fadeIn(duration: 400.ms)
                         .slideY(begin: 0.2, end: 0),
-                    // Бюджеты (если есть)
+                    // Бюджеты
                     Consumer(
                       builder: (context, ref, child) {
                         final budgets = ref.watch(budgetProvider);
                         final activeBudgets = budgets.where((b) => b.isActive).toList();
                         
-                        if (activeBudgets.isEmpty) return const SizedBox.shrink();
-                        
                         return Column(
                           children: [
                             _buildSectionHeader(context, 'Бюджеты', Icons.account_balance_wallet),
                             const SizedBox(height: 12),
-                            _buildBudgetsSummary(context, activeBudgets)
-                                .animate(delay: 100.ms)
-                                .fadeIn(duration: 600.ms)
-                                .slideY(begin: 0.2, end: 0),
+                            if (activeBudgets.isEmpty)
+                              _buildCreateBudgetPrompt(context)
+                                  .animate(delay: 100.ms)
+                                  .fadeIn(duration: 600.ms)
+                                  .slideY(begin: 0.2, end: 0)
+                            else
+                              _buildBudgetsSummary(context, activeBudgets)
+                                  .animate(delay: 100.ms)
+                                  .fadeIn(duration: 600.ms)
+                                  .slideY(begin: 0.2, end: 0),
                             const SizedBox(height: 24),
                           ],
                         );
@@ -623,6 +627,78 @@ class _DashboardTabState extends ConsumerState<DashboardTab> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCreateBudgetPrompt(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const BudgetsScreen()),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF7A3DF2).withOpacity(0.15),
+              const Color(0xFF5A2DB2).withOpacity(0.15),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: const Color(0xFF7A3DF2).withOpacity(0.3),
+            width: 2,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF7A3DF2).withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.account_balance_wallet,
+                color: Color(0xFF7A3DF2),
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Создайте бюджет',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Контролируйте расходы и получайте уведомления',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.6),
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios,
+              color: Color(0xFF7A3DF2),
+              size: 20,
+            ),
+          ],
+        ),
       ),
     );
   }
