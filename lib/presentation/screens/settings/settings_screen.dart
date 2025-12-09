@@ -4,6 +4,7 @@ import 'package:finer/core/theme/glass_theme.dart';
 import 'package:finer/presentation/screens/settings/notification_settings_screen.dart';
 import 'package:finer/presentation/screens/settings/export_data_screen.dart';
 import 'package:finer/presentation/screens/settings/about_screen.dart';
+import 'package:finer/presentation/screens/settings/widget_settings_screen.dart';
 import 'package:finer/presentation/screens/pin/change_pin_screen.dart';
 import 'package:finer/presentation/screens/home/tabs/profile_tab.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -185,6 +186,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ],
                 ),
               ).animate(delay: 350.ms).fadeIn(duration: 400.ms).slideX(begin: -0.2, end: 0),
+              const SizedBox(height: 24),
+
+              // Виджеты
+              _buildSectionHeader('Виджеты', Icons.widgets_outlined)
+                  .animate(delay: 375.ms)
+                  .fadeIn(duration: 400.ms)
+                  .slideX(begin: -0.2, end: 0),
+              const SizedBox(height: 12),
+              GlassCard(
+                padding: const EdgeInsets.all(4),
+                child: Column(
+                  children: [
+                    _buildSettingsTile(
+                      icon: Icons.home_outlined,
+                      iconColor: const Color(0xFF7A3DF2),
+                      title: 'Виджет на рабочем столе',
+                      subtitle: 'Настройка главного экрана',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const WidgetSettingsScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ).animate(delay: 387.ms).fadeIn(duration: 400.ms).slideX(begin: -0.2, end: 0),
               const SizedBox(height: 24),
 
               // Данные
