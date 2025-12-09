@@ -13,6 +13,8 @@ import 'package:finer/presentation/screens/transactions/all_transactions_screen.
 import 'package:finer/presentation/screens/transactions/add_transaction_screen.dart';
 import 'package:finer/core/services/tutorial_service.dart';
 import 'package:finer/presentation/widgets/ai_helper_button.dart';
+import 'package:finer/presentation/providers/budget_provider.dart';
+import 'package:finer/presentation/screens/budgets/budgets_screen.dart';
 import 'package:finer/presentation/screens/home/tabs/chat_tab.dart';
 
 class DashboardTab extends ConsumerStatefulWidget {
@@ -190,13 +192,34 @@ class _DashboardTabState extends ConsumerState<DashboardTab> {
                         .animate()
                         .fadeIn(duration: 400.ms)
                         .slideY(begin: 0.2, end: 0),
-                    
-                    const SizedBox(height: 24),
+                    // Бюджеты (если есть)
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final budgets = ref.watch(budgetProvider);
+                        final activeBudgets = budgets.where((b) => b.isActive).toList();
+                        
+                        if (activeBudgets.isEmpty) return const SizedBox.shrink();
+                        
+                        return Column(
+                          children: [
+                            _buildSectionHeader(context, 'Бюджеты', Icons.account_balance_wallet),
+                            const SizedBox(height: 12),
+                            _buildBudgetsSummary(context, activeBudgets)
+                                .animate(delay: 100.ms)
+                                .fadeIn(duration: 600.ms)
+                                .slideY(begin: 0.2, end: 0),
+                            const SizedBox(height: 24),
+                          ],
+                        );
+                      },
+                    ),
                     
                     // Быстрые действия
+                    _buildSectionHeader(context, 'Быстрые действия', Icons.flash_on),
+                    const SizedBox(height: 12),
                     _buildQuickActions(context)
                         .animate(delay: 100.ms)
-                        .fadeIn(duration: 400.ms)
+                        .fadeIn(duration: 600.ms)
                         .slideY(begin: 0.2, end: 0),
                     
                     const SizedBox(height: 24),
@@ -569,38 +592,168 @@ class _DashboardTabState extends ConsumerState<DashboardTab> {
 
   Widget _buildEmptyState(BuildContext context, String title, String subtitle) {
     return Container(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
       child: Column(
         children: [
           Icon(
             Icons.inbox_outlined,
-            size: 64,
+            size: 48,
             color: Colors.white.withOpacity(0.3),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Text(
             title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Text(
             subtitle,
-            style: const TextStyle(
-              color: Colors.white60,
-              fontSize: 14,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.6),
+              fontSize: 13,
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildBudgetsSummary(BuildContext context, List<dynamic> budgets) {
+    final notifier = ref.read(budgetProvider.notifier);
+    
+    // Показываем только первые 2 бюджета
+    final displayBudgets = budgets.take(2).toList();
+    
+    return Column(
+      children: [
+        ...displayBudgets.map((budget) {
+          final progress = notifier.getProgress(budget);
+          final percentage = notifier.getPercentage(budget);
+          final remaining = notifier.getRemaining(budget);
+          final isWarning = notifier.isWarning(budget);
+          final isExceeded = notifier.isExceeded(budget);
+          
+          Color progressColor;
+          if (isExceeded) {
+            progressColor = Colors.red;
+          } else if (isWarning) {
+            progressColor = Colors.orange;
+          } else {
+            progressColor = const Color(0xFF7A3DF2);
+          }
+          
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withOpacity(0.1)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.restaurant, // TODO: динамическая иконка
+                      color: progressColor,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Продукты', // TODO: динамическое название
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '$percentage%',
+                      style: TextStyle(
+                        color: progressColor,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 6,
+                    backgroundColor: Colors.white.withOpacity(0.1),
+                    valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Осталось: ${remaining.toStringAsFixed(0)} ₸',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.6),
+                        fontSize: 12,
+                      ),
+                    ),
+                    if (isExceeded)
+                      Text(
+                        '⚠️ Превышен',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      )
+                    else if (isWarning)
+                      Text(
+                        '⚠️ Близко к лимиту',
+                        style: TextStyle(
+                          color: Colors.orange,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+        
+        // Кнопка "Все бюджеты"
+        TextButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const BudgetsScreen()),
+            );
+          },
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Text('Все бюджеты'),
+              SizedBox(width: 4),
+              Icon(Icons.arrow_forward, size: 16),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
